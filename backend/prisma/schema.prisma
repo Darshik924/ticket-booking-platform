@@ -24,6 +24,7 @@ model User {
 
   bookings Booking[] // This relation is present in booking schema
 }
+// User --> Booking One to many relationship as one user has multiple bookings
 
 
 // ----------------------------------Events------------------------------------
@@ -43,6 +44,8 @@ model Event {
   seats Seat[]
 }
 
+// Event --> Seat again One to Many relationship
+
 model Seat {
   id Int @id @default(autoincrement())
   eventId Int
@@ -52,11 +55,13 @@ model Seat {
   
   event Event @relation(fields: [eventId], references: [id])
   booking Booking? // Relation to booking is in the Booking schema
+  // If booking may be null over here we do not need to have booking
 
   @@unique([eventId, seatNumber])
-  @@index([eventId, status])
+  @@index([eventId, status]) // Speeds up queries filtering by event and seat status
 }
 
+// Seat to Booking One to One relationship, for now we keep one seat only for one booking
 
 
 // ------------------------------Booking-------------------------------------
@@ -83,3 +88,5 @@ model Booking {
   user User @relation(fields: [userId], references: [id])
   seat Seat @relation(fields: [seatId], references: [id])
 }
+
+// Booking --> User + Seat Many to One relationship, One booking belongs to one user and one seat
