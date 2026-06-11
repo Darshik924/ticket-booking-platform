@@ -1,9 +1,7 @@
 // This file contains the authentication service functions for user registration and login. It interacts with the Prisma client to manage user data in the database, and uses bcrypt for password hashing and comparison. The service also generates JWT tokens for authenticated users.
 import bcrypt from "bcryptjs";
-import { PrismaClient } from "../generated/prisma";
-import { generateToken } from "../utils/generateToken";
-
-const prisma = new PrismaClient();
+import { generateToken } from "../utils/jwtToken";
+import { prisma } from "../lib/prisma";
 
 // Function to register a new user
 export const registerUser = async (
@@ -22,17 +20,7 @@ export const registerUser = async (
   const passwordHash = await bcrypt.hash(password, 10);
 
   return prisma.user.create({
-    data: {
-      name,
-      email,
-      passwordHash,
-    },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      createdAt: true,
-    },
+    data: { name, email, passwordHash },
   });
 };
 
@@ -44,18 +32,11 @@ export const loginUser = async (email: string, password: string) => {
     where: { email },
   });
 
-  console.log("User found:", user);
-
   if (!user) {
     throw new Error("Invalid email or password");
   }
 
-  const isValidPassword = await bcrypt.compare(
-    password,
-    user.passwordHash
-  );
-
-  console.log("Password match:", isValidPassword);
+  const isValidPassword = await bcrypt.compare(password, user.passwordHash);
 
   if (!isValidPassword) {
     throw new Error("Invalid email or password");

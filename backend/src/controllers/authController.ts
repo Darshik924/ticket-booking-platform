@@ -4,12 +4,11 @@ import { Request, Response } from "express";
 import { registerUser } from "../services/authService";
 import { loginUser } from "../services/authService";
 import { AuthRequest } from "../middlewares/authMiddleware";
+import { generateToken } from "../utils/jwtToken";
+import { prisma } from "../lib/prisma";
 
 // Controller function to handle user registration
-export const register = async (
-  req: Request,
-  res: Response
-) => {
+export const register = async (req: Request, res: Response) => {
   try {
     const { name, email, password } = req.body;
 
@@ -20,15 +19,14 @@ export const register = async (
       });
     }
 
-    const user = await registerUser(
-      name,
-      email,
-      password
-    );
+    const user = await registerUser(name, email, password);
+
+    const token = generateToken(user.id, user.email);
 
     return res.status(201).json({
       success: true,
-      data: user,
+      token,
+      user: { id: user.id, email: user.email, name: user.name },
     });
   } catch (error: any) {
     return res.status(400).json({
@@ -38,12 +36,8 @@ export const register = async (
   }
 };
 
-
 // Controller function to handle user login
-export const login = async (
-  req: Request,
-  res: Response
-) => {
+export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
@@ -54,14 +48,13 @@ export const login = async (
       });
     }
 
-    const data = await loginUser(
-      email,
-      password
-    );
+    const data = await loginUser(email, password);
+    const { token, user } = data;
 
     return res.status(200).json({
       success: true,
-      data,
+      token,
+      user,
     });
   } catch (error: any) {
     return res.status(401).json({
@@ -72,12 +65,23 @@ export const login = async (
 };
 
 // Controller function to get the authenticated user's profile
-export const getProfile = async (
-  req: AuthRequest,
-  res: Response
-) => {
+const getProfile = async (req: AuthRequest, res: Response) => {
+  const userId = (req as any).user.userId;
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, name: true, email: true, createdAt: true },
+  });
+
+  if (!user) {
+    res.status(404).json({ error: "User not found" });
+    return;
+  }
+
   res.status(200).json({
     success: true,
-    user: req.user,
+    user
   });
 };
+
+export { getProfile };
