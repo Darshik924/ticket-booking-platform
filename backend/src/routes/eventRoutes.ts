@@ -1,27 +1,22 @@
-import { resolveAny } from "dns";
 import express from "express";
+import {
+  getEvent,
+  createAnEvent,
+  listAllEvents,
+  updateAnEvent,
+  deleteAnEvent,
+} from "../controllers/eventController";
 
 const eventRouter = express.Router();
-
-eventRouter.get("/", (req, res) => {
-  res.json({ message: "okay" });
-});
 // Get all the events for ther users
 
-eventRouter.post("/", (req, res) => {
-  res.json({ message: "okay" });
-});
+eventRouter.get("/", listAllEvents);
+eventRouter.get("/:id", getEvent);
 
-eventRouter.put("/:id", (req, res) => {
-  res.json({ message: "HEll" });
-});
-
-eventRouter.delete("/:id", (req, res) => {
-  res.json({ message: "HEll" });
-});
-
-// POST	/api/events	Private/Admin
-// PUT	/api/events/:id	Private/Admin
-// DELETE	/api/events/:id	Private/Admin
+eventRouter.post("/", createAnEvent);
+eventRouter.put("/:id", updateAnEvent);
+eventRouter.delete("/:id", deleteAnEvent);
+// So here we will need an admin middleware and stuff which i have not put for now since we will need to hardCode that later and also in the database need to make an admin account for ther CRUD ops of the Events + Seats 
+// Date Format need to provide is 2026-06-11T14:30:00.000Z
 
 export default eventRouter;
