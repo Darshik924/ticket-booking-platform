@@ -13,7 +13,7 @@ const adapter = new PrismaPg(pool);
 const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
-    adapter,
+    
     log: ["query", "error", "warn"],
   });
 
