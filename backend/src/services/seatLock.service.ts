@@ -1,0 +1,68 @@
+import path from "path";
+import fs from "fs";
+import { redisClient } from "../lib/redis";
+import { REDIS_KEYS, LOCK_TTL_SECONDS } from "../lib/constants";
+import { number } from "zod";
+
+// Load the Lua Scripts Once as soon as Start
+const lockScript = fs.readFileSync(
+  path.join(__dirname, "../lib/scripts/lockSeat.lua"),
+  "utf8",
+);
+
+const releaseScript = fs.readFileSync(
+  path.join(__dirname, "../lib/scripts/releaseLock.lua"),
+  "utf8",
+);
+
+// Services and Executable functions to Execute the EVAL command + getting lockHolders/lockTTls in the redis console
+
+const acquireSeatAndLock = async (
+  eventId: number,
+  seatId: number,
+  userId: number,
+): Promise<boolean> => {
+  const key = REDIS_KEYS.seatLock(eventId, seatId);
+
+  const result = await redisClient.eval(
+    lockScript, // Passing the Lock script in /lib/scripts/lockScript see once
+    1, // Passing number of keys
+    key, // Passing the key generated from out helper function, this is our KEYS[1]
+    userId, // Passing our ARGV[1] which is defined in our Lua Script
+    String(LOCK_TTL_SECONDS), // ARGV[2]
+  );
+
+  return result === 1;
+};
+
+const releaseYourSeatLock = async (
+  eventId: number,
+  userId: number,
+  seatId: number,
+): Promise<boolean> => {
+  const key = REDIS_KEYS.seatLock(eventId, seatId);
+
+  const result = await redisClient.eval(
+    releaseScript, // Passing the Lock script in /lib/scripts/releaseLock see once
+    1, // Passing number of keys
+    key, // Passing the key generated from out helper function, this is our KEYS[1]
+    userId, // Passing our ARGV[1] which is defined in our Lua Script
+  );
+
+  return result === 1;
+};
+
+const getLockHolder = async (
+  eventId: number,
+  seatId: number,
+): Promise<string | null> => {
+  const key = REDIS_KEYS.seatLock(eventId, seatId);
+  return redisClient.get(key);
+};
+
+const getLockTTL = async (eventId: number, seatId: number): Promise<number> => {
+  const key = REDIS_KEYS.seatLock(eventId, seatId);
+  return redisClient.ttl(key); // This will return us the number of the seconds remaining, and it returns -2 if the key doesnt exists
+};
+
+export { acquireSeatAndLock, getLockHolder, getLockTTL, releaseYourSeatLock };
