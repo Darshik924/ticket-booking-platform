@@ -39,3 +39,11 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server is listening on port ${PORT}`);
 });
+
+
+/* Envoirnment Vairbles */
+// DATABASE_URL=your_postgresql_db_url
+// PORT=
+// JWT_SECRET=your_jwt_secret_key
+// JWT_EXPIRES_IN=7d
+// REDIS_URL=your_redis_url
