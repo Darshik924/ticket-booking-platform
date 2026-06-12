@@ -1,22 +1,24 @@
 //this middleware will be used to protect routes that require authentication. It checks for the presence of a JWT token in the Authorization header, verifies it, and attaches the decoded user information to the request object for use in subsequent handlers.
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { success } from "zod";
+import { prisma } from "../lib/prisma";
 
-// Define a custom request type that includes the user informationfrom the JWT token
+// Define a custom request type that includes the user information from the JWT token
 export interface AuthRequest extends Request {
   user?: {
     userId: number;
+    name?: string;
     email: string;
+    role?: string;
   };
 }
 
 // Middleware to authenticate requests
-export const authenticate = (
+export const authenticateUser = async (
   req: AuthRequest,
   res: Response,
   next: NextFunction,
-): void => {
+) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer")) {
@@ -35,9 +37,28 @@ export const authenticate = (
       email: string;
     };
 
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
     req.user = {
-      userId: decoded.userId,
-      email: decoded.email,
+      userId: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
     };
 
     next();
@@ -48,3 +69,17 @@ export const authenticate = (
     });
   }
 };
+
+const adminAuthenticate = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
+  if (req.user && req.user.role === "ADMIN") {
+    next();
+  } else {
+    res.status(401).json({ message: "Unauthorized for Admin" });
+  }
+};
+
+export { adminAuthenticate };

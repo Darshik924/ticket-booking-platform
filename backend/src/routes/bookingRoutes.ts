@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authenticate } from "../middlewares/authMiddleware";
+import { authenticateUser } from "../middlewares/authMiddleware";
 
 import {
   createBookingHandler,
@@ -11,15 +11,15 @@ import {
 const router = Router();
 
 // Create a new booking
-router.post("/", authenticate, createBookingHandler);
+router.post("/", authenticateUser, createBookingHandler);
 
 // Get all bookings of logged-in user
-router.get("/my", authenticate, getMyBookingsHandler);
+router.get("/my", authenticateUser, getMyBookingsHandler);
 
 // Get a specific booking by booking id
-router.get("/:id", authenticate, getBookingByIdHandler);
+router.get("/:id", authenticateUser, getBookingByIdHandler);
 
 // cancel your bookings
-router.delete("/:id", authenticate, cancelBookingHandler);
+router.delete("/:id", authenticateUser, cancelBookingHandler);
 
 export default router;

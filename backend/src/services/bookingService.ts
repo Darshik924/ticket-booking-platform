@@ -1,6 +1,5 @@
 import { BookingStatus, PrismaClient } from "../generated/prisma";
-
-const prisma = new PrismaClient();
+import { prisma } from "../lib/prisma";
 
 export const createBooking = async (userId: number, seatId: number) => {
   const seat = await prisma.seat.findUnique({
@@ -36,83 +35,72 @@ export const createBooking = async (userId: number, seatId: number) => {
   return booking;
 };
 
-export const getMyBookings = async (
-       userId : number
-)=>{
-    const bookings = await prisma.booking.findMany({//find many becz oneuser => many bookings
-        where:{
-            userId,
-        },
-        include:{
-            seat:true,
-        },
-    });
+export const getMyBookings = async (userId: number) => {
+  const bookings = await prisma.booking.findMany({
+    //find many becz oneuser => many bookings
+    where: {
+      userId,
+    },
+    include: {
+      seat: true,
+    },
+  });
 
-    return bookings;
-
+  return bookings;
 };
 
+export const getBookingById = async (BookingId: number, userId: number) => {
+  const booking = await prisma.booking.findUnique({
+    where: {
+      id: BookingId,
+    },
+    include: {
+      seat: true,
+    },
+  });
 
-export const getBookingById = async(
-    BookingId: number,
-    userId:number 
-)=>{
-    const booking = await prisma.booking.findUnique({
-        where:{
-            id:BookingId,
-        },
-        include:{
-            seat:true,
-        },
-    });
+  if (!booking) {
+    throw new Error("Booking not found");
+  }
 
-    if(!booking){
-        throw new Error("Booking not found");
-    }
+  if (booking.userId !== userId) {
+    throw new Error("Unauthorized");
+  }
 
-    if(booking.userId!== userId){
-        throw new Error("Unauthorized");
-    }
+  return booking;
+};
 
-    return booking;
-}
+export const cancelBooking = async (bookingId: number, userId: number) => {
+  const booking = await prisma.booking.findUnique({
+    where: {
+      id: bookingId,
+    },
+  });
 
-export const cancelBooking = async(
-    bookingId:number, 
-    userId: number
-)=>{
-    const booking = await prisma.booking.findUnique({
-        where:{
-            id:bookingId,
-        },
-    });
-    
-    if(!booking){
-        throw new Error("Booking not found");
-    }
+  if (!booking) {
+    throw new Error("Booking not found");
+  }
 
-    if(booking.userId !== userId){
-      throw new Error("Unathorised");
-    }
+  if (booking.userId !== userId) {
+    throw new Error("Unathorised");
+  }
 
-    const updateBooking = 
-       await prisma.booking.update({
-        where:{
-            id:bookingId,
-        },
-        data:{
-            status :"CANCELLED",
-        },
-       });
-       await prisma.seat.update({
-        where:{
-            id:bookingId,
-        },
-        data:{
-            status:"AVAILABLE",
-        }
-       });
+  const updateBooking = await prisma.booking.update({
+    where: {
+      id: bookingId,
+    },
+    data: {
+      status: "CANCELLED",
+    },
+  });
+  await prisma.seat.update({
+    where: {
+      id: bookingId,
+    },
+    data: {
+      status: "AVAILABLE",
+    },
+  });
 
-       return updateBooking;
-}
-
+  return updateBooking;
+};

@@ -26,7 +26,12 @@ export const register = async (req: Request, res: Response) => {
     return res.status(201).json({
       success: true,
       token,
-      user: { id: user.id, email: user.email, name: user.name },
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+      },
     });
   } catch (error: any) {
     return res.status(400).json({
@@ -70,7 +75,7 @@ const getProfile = async (req: AuthRequest, res: Response) => {
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, name: true, email: true, createdAt: true },
+    select: { id: true, name: true, email: true, createdAt: true, role: true },
   });
 
   if (!user) {
@@ -80,7 +85,7 @@ const getProfile = async (req: AuthRequest, res: Response) => {
 
   res.status(200).json({
     success: true,
-    user
+    user,
   });
 };
 
