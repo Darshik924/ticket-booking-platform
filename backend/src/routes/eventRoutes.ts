@@ -21,15 +21,15 @@ const eventRouter = express.Router();
 /* But when he wants to book a ticket he must Login first so we will keep only the listAllEvents route to be public and all the others to be private (or for a logged in user) */
 
 eventRouter.get("/", listAllEvents);
-eventRouter.get("/:id", getEvent);
+eventRouter.get("/:eventId", getEvent);
 
 // These are the Admin routes which only an admin account will be able to access and perform operations as we dont want users hitting requests for changing the details for an event
 eventRouter.post("/", authenticateUser, adminAuthenticate, createAnEvent);
-eventRouter.put("/:id", authenticateUser, adminAuthenticate, updateAnEvent);
-eventRouter.delete("/:id", authenticateUser, adminAuthenticate, deleteAnEvent);
+eventRouter.put("/:eventId", authenticateUser, adminAuthenticate, updateAnEvent);
+eventRouter.delete("/:eventId", authenticateUser, adminAuthenticate, deleteAnEvent);
 // Date Format need to provide is 2026-06-11T14:30:00.000Z
 // We have The Logical part of the Events + Seats Done check it Once 
 
-eventRouter.get("/:id/seats", getSeatMap);
+eventRouter.get("/:eventId/seats", getSeatMap);
 
 export default eventRouter;

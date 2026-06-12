@@ -55,11 +55,15 @@ const getEvent = async (req: Request, res: Response) => {
     where: { id: newId },
   });
 
-  const availableSeats = prisma.seat.count({
+  const availableSeats = await prisma.seat.count({
     where: { eventId: newId, status: "AVAILABLE" },
   });
 
-  res.status(201).json({ event: { ...event, availableSeats } });
+  if (!event) {
+    return res.status(404).json({ error: "Event not found" });
+  }
+
+  res.status(200).json({ event: { ...event, availableSeats } });
 };
 
 // POST api/events/ - create events + alot Seats
@@ -102,8 +106,12 @@ const updateAnEvent = async (req: Request, res: Response) => {
   }
 
   const { name, venue, date, totalSeats } = parsed.data;
-
   const newId = getIntegerId(eventId);
+  // const newId = +eventId;
+  
+  if (isNaN(newId)) {
+    return res.status(400).json({ error: "Invalid event ID format" });
+  }
 
   try {
     // We use a transaction to ensure everything updates successfully together
@@ -116,7 +124,6 @@ const updateAnEvent = async (req: Request, res: Response) => {
         });
       }
 
-      // 2. Update the event details
       const event = await tx.event.update({
         where: { id: newId },
         data: {
@@ -149,6 +156,10 @@ const updateAnEvent = async (req: Request, res: Response) => {
 const deleteAnEvent = async (req: Request, res: Response) => {
   const { eventId } = req.params;
   const newId = getIntegerId(eventId);
+
+  if (isNaN(newId)) {
+    return res.status(400).json({ error: "Invalid event ID format" });
+  }
 
   try {
     await prisma.seat.deleteMany({

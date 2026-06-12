@@ -1,17 +1,20 @@
-import path from "path";
 import fs from "fs";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
 import { redisClient } from "../lib/redis";
 import { REDIS_KEYS, LOCK_TTL_SECONDS } from "../lib/constants";
-import { number } from "zod";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Load the Lua Scripts Once as soon as Start
 const lockScript = fs.readFileSync(
-  path.join(__dirname, "../lib/scripts/lockSeat.lua"),
+  join(__dirname, "../lib/scripts/lockSeat.lua"),
   "utf8",
 );
 
 const releaseScript = fs.readFileSync(
-  path.join(__dirname, "../lib/scripts/releaseLock.lua"),
+  join(__dirname, "../lib/scripts/releaseLock.lua"),
   "utf8",
 );
 

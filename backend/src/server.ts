@@ -7,6 +7,8 @@ import cors from "cors";
 
 import authRoutes from "./routes/authRoutes";
 import eventRouter from "./routes/eventRoutes";
+import seatRouter from "./routes/seatRoutes";
+import bookingRouter from "./routes/bookingRoutes";
 import { redisClient } from "./lib/redis";
 
 const app = express();
@@ -26,10 +28,11 @@ app.get("/health", async (req, res) => {
   }
 });
 
-
 // Use All Your Routings
 app.use("/api/auth", authRoutes);
 app.use("/api/events", eventRouter);
+app.use("/api/seats", seatRouter);
+app.use("/api/booking", bookingRouter);
 
 const PORT = process.env.PORT || 5000;
 
