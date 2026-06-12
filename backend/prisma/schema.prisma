@@ -16,12 +16,20 @@ datasource db {
 
 
 // ----------------------------------USER--------------------------------------
+
+enum Role {
+  CUSTOMER // ALL the users should have a CUSTOMER role
+  ADMIN // Only one admin must have the ADMIN role and he must be there to add Events + Seat
+}
+
+
 model User {
   id Int @id @default(autoincrement())
   name String
   email String @unique 
   passwordHash String
   createdAt DateTime @default(now())
+  role Role @default(CUSTOMER)
 
   bookings Booking[] // This relation is present in booking schema
 }

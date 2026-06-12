@@ -20,14 +20,12 @@ export const registerUser = async (
   const passwordHash = await bcrypt.hash(password, 10);
 
   return prisma.user.create({
-    data: { name, email, passwordHash },
+    data: { name, email, passwordHash, role: "CUSTOMER" },
   });
 };
 
 // Function to authenticate a user and generate a JWT token
 export const loginUser = async (email: string, password: string) => {
-  console.log("Email entered:", email);
-
   const user = await prisma.user.findUnique({
     where: { email },
   });
@@ -50,6 +48,7 @@ export const loginUser = async (email: string, password: string) => {
       id: user.id,
       name: user.name,
       email: user.email,
+      role: user.role,
     },
   };
 };
