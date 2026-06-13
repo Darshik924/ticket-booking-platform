@@ -16,6 +16,13 @@ datasource db {
 
 
 // ----------------------------------USER--------------------------------------
+
+enum Role {
+  CUSTOMER // ALL the users should have a CUSTOMER role
+  ADMIN // Only one admin must have the ADMIN role and he must be there to add Events + Seat
+}
+
+
 model User {
   id Int @id @default(autoincrement())
   name String
@@ -25,6 +32,7 @@ model User {
   avatar       String?
 
   createdAt DateTime @default(now())
+  role Role @default(CUSTOMER)
 
   bookings Booking[] // This relation is present in booking schema
 }
@@ -54,7 +62,7 @@ model Seat {
   id Int @id @default(autoincrement())
   eventId Int
   seatNumber String
-  status      SeatStatus @default(AVAILABLE)
+  status SeatStatus @default(AVAILABLE)
   createdAt DateTime @default(now())
   
   event Event @relation(fields: [eventId], references: [id])
@@ -87,8 +95,8 @@ model Booking {
   seatId Int @unique
   status BookingStatus @default(PENDING)
   paymentStatus PaymentStatus @default(UNPAID)
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   user User @relation(fields: [userId], references: [id])
   seat Seat @relation(fields: [seatId], references: [id])
 }

@@ -4,14 +4,18 @@ import { prisma } from "../lib/prisma";
 import { REDIS_KEYS } from "../lib/constants";
 import { getIntegerId } from "../utils/getIntegerIds";
 
+// For frontend Map in order for user to select seats which he wants to book
 const getSeatMap = async (req: Request, res: Response) => {
   const { eventId } = req.params;
-
   const newId = getIntegerId(eventId);
+
+  if (isNaN(newId)) {
+    return res.status(400).json({ error: "Invalid event ID format" });
+  }
 
   const event = await prisma.event.findUnique({ where: { id: newId } });
   if (!event) {
-    res.status(401).json({ message: "Event not found" });
+    return res.status(404).json({ message: "Event not found" });
   }
 
   const seats = await prisma.seat.findMany({
@@ -33,10 +37,10 @@ const getSeatMap = async (req: Request, res: Response) => {
         // This is the coded key got with the help of the helper instance that is REDIS_KEYS in /lib/constants.ts
         const lockedBy = await redisClient.get(lockKey);
 
-        if (lockedBy) {
-          return { ...seat, status: "LOCKED" as const };
-        }
-      } else return seat;
+        return lockedBy ? { ...seat, status: "LOCKED" as const } : seat;
+      }
+
+      return seat;
     }),
   );
 

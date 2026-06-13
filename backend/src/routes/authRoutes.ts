@@ -7,6 +7,8 @@ import {
 import { authenticate } from "../middlewares/authMiddleware";
 import passport from "passport";
 import { success } from "zod";
+import { register, login, getProfile } from "../controllers/authController";
+import { authenticateUser } from "../middlewares/authMiddleware";
 
 const router = Router();
 
@@ -17,7 +19,7 @@ router.post("/register", register);
 router.post("/login", login);
 
 // Get current logged-in user profile
-router.get("/me", authenticate, getProfile);
+router.get("/me", authenticateUser, getProfile);
 
 //google login route
 router.get("/google", passport.authenticate("google",{
@@ -37,4 +39,5 @@ router.get("/google/callback",
   }
 );
 
+export default router;
 export default router;

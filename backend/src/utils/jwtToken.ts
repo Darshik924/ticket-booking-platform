@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 
 interface jwtPayload {
   userId: number;
-  email: String;
+  email: string;
 }
 const SECRET = process.env.JWT_SECRET!;
 
