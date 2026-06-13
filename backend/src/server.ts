@@ -8,10 +8,13 @@ import cors from "cors";
 import authRoutes from "./routes/authRoutes";
 import eventRouter from "./routes/eventRoutes";
 import { redisClient } from "./lib/redis";
+import passport from "passport";
+import "./config/passport";
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(passport.initialize());
 
 app.get("/health", async (req, res) => {
   try {

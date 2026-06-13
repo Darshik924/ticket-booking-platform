@@ -20,7 +20,10 @@ model User {
   id Int @id @default(autoincrement())
   name String
   email String @unique 
-  passwordHash String
+  passwordHash String?
+  googleId     String?  @unique
+  avatar       String?
+
   createdAt DateTime @default(now())
 
   bookings Booking[] // This relation is present in booking schema

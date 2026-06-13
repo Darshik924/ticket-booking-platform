@@ -5,6 +5,8 @@ import {
   getProfile,
 } from "../controllers/authController";
 import { authenticate } from "../middlewares/authMiddleware";
+import passport from "passport";
+import { success } from "zod";
 
 const router = Router();
 
@@ -16,5 +18,23 @@ router.post("/login", login);
 
 // Get current logged-in user profile
 router.get("/me", authenticate, getProfile);
+
+//google login route
+router.get("/google", passport.authenticate("google",{
+  scope:["profile","email"],
+})
+);
+
+//google callback
+router.get("/google/callback",
+  passport.authenticate("google",{
+    session :false, 
+  }),
+  (req,res)=>{
+    
+      res.status(200).json(req.user);
+  
+  }
+);
 
 export default router;
