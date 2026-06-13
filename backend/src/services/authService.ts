@@ -34,6 +34,11 @@ export const loginUser = async (email: string, password: string) => {
     throw new Error("Invalid email or password");
   }
 
+
+if (!user.passwordHash) {
+  throw new Error("This account uses Google Sign-In");
+}
+
   const isValidPassword = await bcrypt.compare(password, user.passwordHash);
 
   if (!isValidPassword) {
@@ -49,6 +54,94 @@ export const loginUser = async (email: string, password: string) => {
       name: user.name,
       email: user.email,
       role: user.role,
+    },
+  };
+};
+
+//login using the googleAuth
+export const googleLogin = async (
+  googleId: string,
+  email: string,
+  name: string,
+  avatar?: string
+) => {
+  // Check if user already exists with this Google account
+  const existingGoogleUser = await prisma.user.findUnique({
+    where: {
+      googleId,
+    },
+  });
+
+  if (existingGoogleUser) {
+    const token = generateToken(
+      existingGoogleUser.id,
+      existingGoogleUser.email
+    );
+
+    return {
+      token,
+      user: {
+        id: existingGoogleUser.id,
+        name: existingGoogleUser.name,
+        email: existingGoogleUser.email,
+      },
+    };
+  }
+
+  // Check if user exists with same email
+  let existWithEmail = await prisma.user.findUnique({
+    where: {
+      email,
+    },
+  });
+
+  if (existWithEmail) {
+    existWithEmail = await prisma.user.update({
+      where: {
+        id: existWithEmail.id,
+      },
+      data: {
+        googleId,
+        avatar,
+      },
+    });
+
+    const token = generateToken(
+      existWithEmail.id,
+      existWithEmail.email
+    );
+
+    return {
+      token,
+      user: {
+        id: existWithEmail.id,
+        name: existWithEmail.name,
+        email: existWithEmail.email,
+      },
+    };
+  }
+
+  // Create new Google user
+  const newUser = await prisma.user.create({
+    data: {
+      name,
+      email,
+      googleId,
+      avatar,
+    },
+  });
+
+  const token = generateToken(
+    newUser.id,
+    newUser.email
+  );
+
+  return {
+    token,
+    user: {
+      id: newUser.id,
+      name: newUser.name,
+      email: newUser.email,
     },
   };
 };

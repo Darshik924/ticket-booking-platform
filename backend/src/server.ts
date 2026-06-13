@@ -10,10 +10,13 @@ import eventRouter from "./routes/eventRoutes";
 import seatRouter from "./routes/seatRoutes";
 import bookingRouter from "./routes/bookingRoutes";
 import { redisClient } from "./lib/redis";
+import passport from "passport";
+import "./config/passport";
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(passport.initialize());
 
 app.get("/health", async (req, res) => {
   try {
