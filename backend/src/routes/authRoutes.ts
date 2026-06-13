@@ -4,10 +4,8 @@ import {
   login,
   getProfile,
 } from "../controllers/authController";
-import { authenticate } from "../middlewares/authMiddleware";
 import passport from "passport";
 import { success } from "zod";
-import { register, login, getProfile } from "../controllers/authController";
 import { authenticateUser } from "../middlewares/authMiddleware";
 
 const router = Router();
@@ -39,5 +37,4 @@ router.get("/google/callback",
   }
 );
 
-export default router;
 export default router;

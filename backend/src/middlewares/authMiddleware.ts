@@ -18,7 +18,7 @@ export const authenticateUser = async (
   req: AuthRequest,
   res: Response,
   next: NextFunction,
-) => {
+): Promise<void> => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer")) {
@@ -48,10 +48,11 @@ export const authenticateUser = async (
     });
 
     if (!user) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         message: "User not found",
       });
+      return;
     }
 
     req.user = {
