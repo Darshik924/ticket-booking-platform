@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request, RequestHandler, Response } from "express";
 import { prisma } from "../lib/prisma";
 
 import {
@@ -11,10 +11,11 @@ import { AuthRequest } from "../middlewares/authMiddleware";
 import { getIntegerId } from "../utils/getIntegerIds";
 
 // POST /api/seats/:seatId/lock
-const lockSeat = async (req: AuthRequest, res: Response) => {
+const lockSeat: RequestHandler = async (req, res) => {
   const { seatId } = req.params;
+  const authReq = req as AuthRequest;
   const newSeatId = getIntegerId(seatId);
-  const userId = req.user?.userId;
+  const userId = authReq.user?.userId;
 
   //  Now First Check if a seat Exists (valid Id) and status if available in the database
   const seat = await prisma.seat.findUnique({
@@ -40,9 +41,7 @@ const lockSeat = async (req: AuthRequest, res: Response) => {
   //   Logic is situated in our Functions
 
   if (!locked) {
-    res
-      .status(409)
-      .json({ error: "Seat is currently locked by another user" });
+    res.status(409).json({ error: "Seat is currently locked by another user" });
     return;
   }
 
@@ -60,10 +59,11 @@ const lockSeat = async (req: AuthRequest, res: Response) => {
 
 // Controller function for someone if He wants to Unlock His Seat
 // DELETE /api/seats/:seatId/lock
-const unLockSeat = async (req: AuthRequest, res: Response) => {
+const unLockSeat: RequestHandler = async (req, res) => {
   const { seatId } = req.params;
+  const authReq = req as AuthRequest;
   const newSeatId = getIntegerId(seatId);
-  const userId = req.user?.userId;
+  const userId = authReq.user?.userId;
 
   const seat = await prisma.seat.findUnique({ where: { id: newSeatId } });
 

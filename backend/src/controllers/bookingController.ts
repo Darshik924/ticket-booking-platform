@@ -1,6 +1,6 @@
 //talks to server
 
-import { Request, Response } from "express";
+import { RequestHandler, Response } from "express";
 import { createBooking } from "../services/bookingService";
 import { AuthRequest } from "../middlewares/authMiddleware";
 import { getMyBookings } from "../services/bookingService";
@@ -8,9 +8,17 @@ import { success } from "zod";
 import { getBookingById } from "../services/bookingService";
 import { cancelBooking } from "../services/bookingService";
 
-export const createBookingHandler = async (req: AuthRequest, res: Response) => {
+export const createBookingHandler: RequestHandler = async (req, res) => {
+  const authReq = req as AuthRequest;
+
   try {
-    const userId = req.user!.userId;
+    const userId = authReq.user?.userId;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
 
     const { seatId } = req.body;
 
@@ -28,11 +36,19 @@ export const createBookingHandler = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const getMyBookingsHandler = async (req: AuthRequest, res: Response) => {
-  try {
-    const userId = req.user!.userId; //gives logged-in user
+export const getMyBookingsHandler: RequestHandler = async (req, res) => {
+  const authReq = req as AuthRequest;
 
-    const bookings = await getMyBookings(userId); //fetch only the above received only one userId
+  try {
+    const userId = authReq.user?.userId; // gives logged in User
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const bookings = await getMyBookings(userId); // fetch only the above recieved only
 
     res.status(200).json({
       success: true,
@@ -46,14 +62,18 @@ export const getMyBookingsHandler = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const getBookingByIdHandler = async (
-  req: AuthRequest,
-  res: Response,
-) => {
+export const getBookingByIdHandler: RequestHandler = async (req, res) => {
+  const authReq = req as AuthRequest;
+
   try {
     const bookingId = Number(req.params.id);
-
-    const userId = req.user!.userId;
+    const userId = authReq.user?.userId;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
 
     const booking = await getBookingById(bookingId, userId);
 
@@ -69,13 +89,20 @@ export const getBookingByIdHandler = async (
   }
 };
 
-export const cancelBookingHandler = async (req: AuthRequest, res: Response) => {
+export const cancelBookingHandler: RequestHandler = async (req, res) => {
+  const authReq = req as AuthRequest;
+
   try {
     //booking id from URL
     const bookingId = Number(req.params.id);
-
-    //logged in user id from jwt
-    const userId = req.user!.userId;
+    // logged in user from jwt
+    const userId = authReq.user?.userId;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
 
     const booking = await cancelBooking(bookingId, userId);
 

@@ -1,5 +1,5 @@
 //this middleware will be used to protect routes that require authentication. It checks for the presence of a JWT token in the Authorization header, verifies it, and attaches the decoded user information to the request object for use in subsequent handlers.
-import { Request, Response, NextFunction } from "express";
+import { Request, RequestHandler } from "express";
 import jwt from "jsonwebtoken";
 import { prisma } from "../lib/prisma";
 
@@ -14,12 +14,14 @@ export interface AuthRequest extends Request {
 }
 
 // Middleware to authenticate requests
-export const authenticateUser = async (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction,
+export const authenticateUser: RequestHandler = async (
+  req,
+  res,
+  next,
 ): Promise<void> => {
-  const authHeader = req.headers.authorization;
+  const authReq = req as AuthRequest; // By doing this we only tell TS that treat this same object as having user
+
+  const authHeader = authReq.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer")) {
     res.status(401).json({
@@ -55,7 +57,7 @@ export const authenticateUser = async (
       return;
     }
 
-    req.user = {
+    authReq.user = {
       userId: user.id,
       name: user.name,
       email: user.email,
@@ -71,12 +73,10 @@ export const authenticateUser = async (
   }
 };
 
-const adminAuthenticate = async (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction,
-) => {
-  if (req.user && req.user.role === "ADMIN") {
+const adminAuthenticate: RequestHandler = (req, res, next) => {
+  const authReq = req as AuthRequest;
+
+  if (authReq.user && authReq.user.role === "ADMIN") {
     next();
   } else {
     res.status(401).json({ message: "Unauthorized for Admin" });
