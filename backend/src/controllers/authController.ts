@@ -1,6 +1,6 @@
 // changes User model
 // This file contains the authentication controller functions for handling user registration, login, and profile retrieval. It uses the authService functions to perform the necessary operations and sends appropriate HTTP responses based on the outcomes.
-import { Request, Response } from "express";
+import { Request, RequestHandler, Response } from "express";
 import { registerUser } from "../services/authService";
 import { loginUser } from "../services/authService";
 import { AuthRequest } from "../middlewares/authMiddleware";
@@ -70,8 +70,9 @@ export const login = async (req: Request, res: Response) => {
 };
 
 // Controller function to get the authenticated user's profile
-const getProfile = async (req: AuthRequest, res: Response) => {
-  const userId = (req as any).user.userId;
+const getProfile: RequestHandler = async (req, res) => {
+  const authReq = req as AuthRequest;
+  const userId = authReq.user?.userId;
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
