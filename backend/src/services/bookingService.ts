@@ -1,5 +1,10 @@
 import { BookingStatus, PrismaClient } from "../generated/prisma";
 import { prisma } from "../lib/prisma";
+import {
+  getLockHolder,
+  releaseYourSeatLock,
+} from "../services/seatLock.service";
+
 
 export const createBooking = async (userId: number, seatId: number) => {
   const seat = await prisma.seat.findUnique({
@@ -7,34 +12,63 @@ export const createBooking = async (userId: number, seatId: number) => {
       id: seatId,
     },
   });
+  
+ 
 
   if (!seat) {
     throw new Error("Seat not found");
+  }
+
+   //verify lock ownerShip 
+  const lockHolder = await getLockHolder(
+    seat.eventId,
+    seat.id
+  );
+
+  if(!lockHolder || Number(lockHolder) !== userId){
+    throw new Error(
+      "You dont own this seat lock"
+    );
   }
 
   if (seat.status !== "AVAILABLE") {
     throw new Error("seat is not AVAILABLE");
   }
 
-  const booking = await prisma.booking.create({
-    data: {
-      userId,
-      seatId,
-    },
-  });
+  // tx->transaction client -->insure that both the booking and the update of the seat take place together if any fails then both fails 
+const booking = await prisma.$transaction(async(tx)=>{
+     const booking = await tx.booking.create({
+      data:{
+        userId, 
+        seatId,
+      },
+     });
 
-  await prisma.seat.update({
-    where: {
-      id: seatId,
-    },
-    data: {
-      status: "BOOKED",
-    },
-  });
+     await tx.seat.update({
+      where:{
+        id:seatId,
+      },
+      data:{
+        status:"BOOKED",
+      },
+     });
+     return booking;
+})
 
-  return booking;
+ 
+
+  //release a redis lock 
+  await releaseYourSeatLock(
+    seat.eventId,
+    seat.id,
+    userId
+  );
+
+   return booking;
+  
 };
 
+//get your existing bookings
 export const getMyBookings = async (userId: number) => {
   const bookings = await prisma.booking.findMany({
     //find many becz oneuser => many bookings
@@ -70,6 +104,7 @@ export const getBookingById = async (BookingId: number, userId: number) => {
   return booking;
 };
 
+//cancle your booking
 export const cancelBooking = async (bookingId: number, userId: number) => {
   const booking = await prisma.booking.findUnique({
     where: {
@@ -85,7 +120,11 @@ export const cancelBooking = async (bookingId: number, userId: number) => {
     throw new Error("Unathorised");
   }
 
-  const updateBooking = await prisma.booking.update({
+  // tx -> transaction client  both bookings cancelled and seat available again should happen together if any fails then both fails
+  const updateBooking = await prisma.$transaction(async (tx) => {
+    //update booking status to cancelled
+     const updateBooking = await tx.booking.update
+  ({
     where: {
       id: bookingId,
     },
@@ -93,13 +132,18 @@ export const cancelBooking = async (bookingId: number, userId: number) => {
       status: "CANCELLED",
     },
   });
-  await prisma.seat.update({
+
+  // make the seat available again
+  await tx.seat.update({
     where: {
-      id: bookingId,
+      id: booking.seatId,  //remember that seatId is not a bookingId
     },
     data: {
       status: "AVAILABLE",
     },
+  });
+  return updateBooking;
+
   });
 
   return updateBooking;

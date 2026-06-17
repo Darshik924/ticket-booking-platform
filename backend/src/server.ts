@@ -35,7 +35,7 @@ app.get("/health", async (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/events", eventRouter);
 app.use("/api/seats", seatRouter);
-app.use("/api/booking", bookingRouter);
+app.use("/api/bookings", bookingRouter);
 
 const PORT = process.env.PORT || 5000;
 
