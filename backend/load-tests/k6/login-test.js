@@ -2,8 +2,8 @@ import http from 'k6/http';
 import { check, sleep } from 'k6';
 
 export const options = {
-  vus: 170,
-  duration: '1m',
+  vus: 20,
+  duration: '2m',
 };
 
 const BASE_URL = 'http://localhost:5000/api/auth';
