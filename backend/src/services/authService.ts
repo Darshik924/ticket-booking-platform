@@ -34,10 +34,9 @@ export const loginUser = async (email: string, password: string) => {
     throw new Error("Invalid email or password");
   }
 
-
-if (!user.passwordHash) {
-  throw new Error("This account uses Google Sign-In");
-}
+  if (!user.passwordHash) {
+    throw new Error("This account uses Google Sign-In");
+  }
 
   const isValidPassword = await bcrypt.compare(password, user.passwordHash);
 
@@ -53,7 +52,7 @@ if (!user.passwordHash) {
       id: user.id,
       name: user.name,
       email: user.email,
-      
+      role: user.role,
     },
   };
 };
@@ -63,7 +62,7 @@ export const googleLogin = async (
   googleId: string,
   email: string,
   name: string,
-  avatar?: string
+  avatar?: string,
 ) => {
   // Check if user already exists with this Google account
   const existingGoogleUser = await prisma.user.findUnique({
@@ -75,7 +74,7 @@ export const googleLogin = async (
   if (existingGoogleUser) {
     const token = generateToken(
       existingGoogleUser.id,
-      existingGoogleUser.email
+      existingGoogleUser.email,
     );
 
     return {
@@ -106,10 +105,7 @@ export const googleLogin = async (
       },
     });
 
-    const token = generateToken(
-      existWithEmail.id,
-      existWithEmail.email
-    );
+    const token = generateToken(existWithEmail.id, existWithEmail.email);
 
     return {
       token,
@@ -131,10 +127,7 @@ export const googleLogin = async (
     },
   });
 
-  const token = generateToken(
-    newUser.id,
-    newUser.email
-  );
+  const token = generateToken(newUser.id, newUser.email);
 
   return {
     token,
