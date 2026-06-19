@@ -5,6 +5,8 @@ const REDIS_KEYS = {
   waitingQueue: (eventId: number) => `waiting_queue:${eventId}`,
 
   activeUsers: (eventId: number) => `active_users:${eventId}`,
+
+  eventSeats: (eventId: number) => `event_seats:${eventId}`,
 };
 
 export const LOCK_TTL_SECONDS = 300; // 5 minutes

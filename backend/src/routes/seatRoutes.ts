@@ -4,8 +4,8 @@ import { authenticateUser } from "../middlewares/authMiddleware";
 
 const seatRouter = express.Router();
 
-seatRouter.post("/:seatId/lock", authenticateUser, lockSeat);
-seatRouter.delete("/:seatId/lock", authenticateUser, unLockSeat);
+seatRouter.post("/:eventId/:seatId/lock", authenticateUser, lockSeat);
+seatRouter.delete("/:eventId/:seatId/lock", authenticateUser, unLockSeat);
 // The seatId route parameter should be the seat id of the seat (of the seat in the database) and nothing like the A2 or A3 number of their 2 or 3 number NO.
 
 export default seatRouter;

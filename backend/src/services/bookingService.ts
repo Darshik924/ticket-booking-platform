@@ -1,5 +1,8 @@
 import { BookingStatus, PrismaClient } from "../generated/prisma";
 import { prisma } from "../lib/prisma";
+import { redisClient } from "../lib/redis";
+import { REDIS_KEYS } from "../lib/constants";
+import { promoteQueueAndNotify } from "./queueService";
 
 export const createBooking = async (userId: number, seatId: number) => {
   const seat = await prisma.seat.findUnique({
@@ -31,6 +34,22 @@ export const createBooking = async (userId: number, seatId: number) => {
       status: "BOOKED",
     },
   });
+
+  // Update the seat status in the Redis Hash cache
+  const hashKey = REDIS_KEYS.eventSeats(seat.eventId);
+  const seatVal = await redisClient.hget(hashKey, String(seatId));
+  if (seatVal) {
+    const colonIdx = seatVal.indexOf(":");
+    const seatNumber = seatVal.substring(0, colonIdx);
+    await redisClient.hset(hashKey, String(seatId), `${seatNumber}:BOOKED`);
+  }
+
+  // Remove user from active pool after booking completion, and promote the queue
+  const activeKey = REDIS_KEYS.activeUsers(seat.eventId);
+  await redisClient.srem(activeKey, String(userId));
+  promoteQueueAndNotify(seat.eventId).catch((err) =>
+    console.error("Queue promotion failed:", err)
+  );
 
   return booking;
 };
@@ -75,6 +94,9 @@ export const cancelBooking = async (bookingId: number, userId: number) => {
     where: {
       id: bookingId,
     },
+    include: {
+      seat: true,
+    },
   });
 
   if (!booking) {
@@ -95,12 +117,23 @@ export const cancelBooking = async (bookingId: number, userId: number) => {
   });
   await prisma.seat.update({
     where: {
-      id: bookingId,
+      id: booking.seatId,
     },
     data: {
       status: "AVAILABLE",
     },
   });
+
+  // Update the seat status in the Redis Hash cache
+  if (booking.seat) {
+    const hashKey = REDIS_KEYS.eventSeats(booking.seat.eventId);
+    const seatVal = await redisClient.hget(hashKey, String(booking.seatId));
+    if (seatVal) {
+      const colonIdx = seatVal.indexOf(":");
+      const seatNumber = seatVal.substring(0, colonIdx);
+      await redisClient.hset(hashKey, String(booking.seatId), `${seatNumber}:AVAILABLE`);
+    }
+  }
 
   return updateBooking;
 };

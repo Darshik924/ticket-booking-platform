@@ -22,16 +22,21 @@ export const authenticateUser: RequestHandler = async (
   const authReq = req as AuthRequest; // By doing this we only tell TS that treat this same object as having user
 
   const authHeader = authReq.headers.authorization;
+  let token = authReq.headers.cookie?.match(/token=([^;]+)/)?.[1];
 
-  if (!authHeader || !authHeader.startsWith("Bearer")) {
+  if (!token) {
+    if (authHeader && authHeader.startsWith("Bearer")) {
+      token = authHeader.split(" ")[1];
+    }
+  }
+
+  if (!token) {
     res.status(401).json({
       success: false,
       message: "Token missing",
     });
     return;
   }
-
-  const token = authHeader.split(" ")[1];
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as {

@@ -26,13 +26,16 @@ const acquireSeatAndLock = async (
   userId: number,
 ): Promise<boolean> => {
   const key = REDIS_KEYS.seatLock(eventId, seatId);
+  const hashKey = REDIS_KEYS.eventSeats(eventId);
 
   const result = await redisClient.eval(
-    lockScript, // Passing the Lock script in /lib/scripts/lockScript see once
-    1, // Passing number of keys
-    key, // Passing the key generated from out helper function, this is our KEYS[1]
-    userId, // Passing our ARGV[1] which is defined in our Lua Script
-    String(LOCK_TTL_SECONDS), // ARGV[2]
+    lockScript,
+    2,
+    key,
+    hashKey,
+    userId,
+    String(LOCK_TTL_SECONDS),
+    String(seatId),
   );
 
   return result === 1;
@@ -40,16 +43,19 @@ const acquireSeatAndLock = async (
 
 const releaseYourSeatLock = async (
   eventId: number,
-  userId: number,
   seatId: number,
+  userId: number,
 ): Promise<boolean> => {
   const key = REDIS_KEYS.seatLock(eventId, seatId);
+  const hashKey = REDIS_KEYS.eventSeats(eventId);
 
   const result = await redisClient.eval(
-    releaseScript, // Passing the Lock script in /lib/scripts/releaseLock see once
-    1, // Passing number of keys
-    key, // Passing the key generated from out helper function, this is our KEYS[1]
-    userId, // Passing our ARGV[1] which is defined in our Lua Script
+    releaseScript,
+    2,
+    key,
+    hashKey,
+    userId,
+    String(seatId),
   );
 
   return result === 1;
