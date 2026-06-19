@@ -1,7 +1,20 @@
-import React from "react";
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 const Home = () => {
-  return <div className="text-red-600 text-2xl">Home</div>;
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading) {
+      router.push(user ? "/events" : "/login");
+    }
+  }, [user, loading, router]);
+
+  return null;
 };
 
 export default Home;
