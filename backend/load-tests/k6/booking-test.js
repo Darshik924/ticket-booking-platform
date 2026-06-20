@@ -1,91 +1,55 @@
-import http from "k6/http";
-import { check, sleep } from "k6";
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+// Read configuration from environment variables, fallback to defaults
+const BASE_URL = __ENV.BASE_URL || 'http://localhost:5000';
+const EVENT_ID = __ENV.EVENT_ID || '1';
 
 export const options = {
-  vus: 50, //virtual users
-  duration: "1m", //duration of the test
+    stages: [
+        { duration: '30s', target: 200 }, // Ramp-up to 200 VUs
+        { duration: '1m', target: 200 },  // Sustain 200 VUs (stress phase)
+        { duration: '30s', target: 0 },   // Ramp-down to 0 VUs
+    ],
+
+    http: {
+        cookieJar: {
+            local: true,
+        },
+    },
+    thresholds: {
+        // Assert that less than 1% of requests to the getSeatMap endpoint fail
+        'http_req_failed{name:getSeatMap}': ['rate<0.01'],
+        // Assert that 95% of requests to the getSeatMap endpoint complete within 500ms
+        'http_req_duration{name:getSeatMap}': ['p(95)<500'],
+    },
 };
 
-//base url of the api
-const BASE_URL = "http://localhost:5000/api";
-
-//function to perform the booking
 export default function () {
-  //create a login payload to get the token
-  const payload = JSON.stringify({
-    email: "hvk@gmail.com",
-    password: "123456789",
-  });
+    const seatMapParams = {
+        headers: {
+            'Content-Type': 'application/json',
+            // No identity headers needed since the backend generates and tracks guestIds natively
+        },
+        tags: { name: 'getSeatMap' },
+    };
 
-  //set the headers for the request
-  const params = {
-    headers: {
-      "Content-Type": "application/json",
-    },
-  };
+    // Fetch the seat map for the designated event
+    const seatMapRes = http.get(`${BASE_URL}/api/events/${EVENT_ID}/seats`, seatMapParams);
 
-  //login request to get the token
-  const loginRes = http.post(
-    `${BASE_URL}/auth/login`,
-    payload,
-    params
-  );
+    // Assert that response is 200 (ACTIVE) or 202 (WAITING in queue)
+    check(seatMapRes, {
+        'status is 200 or 202': (r) => r.status === 200 || r.status === 202,
+        'valid status field': (r) => {
+            try {
+                const body = r.json();
+                return body.status === 'ACTIVE' || body.status === 'WAITING';
+            } catch (e) {
+                return false;
+            }
+        },
+    });
 
-  //check login status
-  check(loginRes, {
-    "login successful": (r) => r.status === 200,
-  });
-
-  //stops if login fails
-  if (loginRes.status !== 200) {
-    return;
-  }
-
-  //extract token if login is successful
-  const token = JSON.parse(loginRes.body).token;
-
-  //choose seat for each virtual user
-  //const seatId = __VU; //for each interation after 1 sec iterate sae booked seats 1-10 
-  const seatId = ((__ITER * 10 + __VU) % 200) + 1;//use different seat for each iteration and virtual user to avoid conflicts and to test the locking mechanism effectively
-
-  //lock seat(redis)
-  const lockRes = http.post(
-    `${BASE_URL}/seats/${seatId}/lock`,
-    null,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
-
-  //verify lock
-  check(lockRes, {
-    "seat locked": (r) => r.status === 200,
-  });
-
-  if (lockRes.status !== 200) {
-    return;
-  }
-
-  //book seat
-  const bookingRes = http.post(
-    `${BASE_URL}/bookings`,
-    JSON.stringify({
-      seatId: seatId,
-    }),
-    {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
-
-  //verify booking
-  check(bookingRes, {
-    "booking successful": (r) => r.status === 201,
-  });
-
-  sleep(1); //wait for 1 second before making the booking request
+    // Pause for 1 second between requests per VU to simulate real user behavior
+    sleep(1);
 }

@@ -9,9 +9,14 @@ import authRoutes from "./routes/authRoutes";
 import eventRouter from "./routes/eventRoutes";
 import seatRouter from "./routes/seatRoutes";
 import bookingRouter from "./routes/bookingRoutes";
+import paymentRouter from "./routes/paymentRoutes";
 import { redisClient } from "./lib/redis";
 import passport from "passport";
 import "./config/passport";
+
+import { createServer } from "http";
+import { initSocket } from "./lib/socket";
+import "./services/PaymentWorker";
 
 const app = express();
 app.use(cors());
@@ -35,11 +40,19 @@ app.get("/health", async (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/events", eventRouter);
 app.use("/api/seats", seatRouter);
+<<<<<<< HEAD
+app.use("/api/booking", bookingRouter);
+app.use("/api/payment", paymentRouter);
+=======
 app.use("/api/bookings", bookingRouter);
+>>>>>>> origin/main
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+const server = createServer(app);
+initSocket(server);
+
+server.listen(PORT, () => {
   console.log(`Server is listening on port ${PORT}`);
 });
 
