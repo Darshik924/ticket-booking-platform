@@ -148,6 +148,7 @@ export const googleLogin = async (
         id: existingGoogleUser.id,
         name: existingGoogleUser.name,
         email: existingGoogleUser.email,
+        role :existingGoogleUser.role,
       },
     };
   }
