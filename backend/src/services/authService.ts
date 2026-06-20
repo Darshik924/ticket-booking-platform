@@ -1,5 +1,5 @@
 // This file contains the authentication service functions for user registration and login. It interacts with the Prisma client to manage user data in the database, and uses bcrypt for password hashing and comparison. The service also generates JWT tokens for authenticated users.
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt"
 import { generateToken } from "../utils/jwtToken";
 import { prisma } from "../lib/prisma";
 
@@ -25,10 +25,47 @@ export const registerUser = async (
 };
 
 // Function to authenticate a user and generate a JWT token
+// export const loginUser = async (email: string, password: string) => {
+//   const user = await prisma.user.findUnique({
+//     where: { email },
+//   });
+
+//   if (!user) {
+//     throw new Error("Invalid email or password");
+//   }
+
+//   if (!user.passwordHash) {
+//     throw new Error("This account uses Google Sign-In");
+//   }
+
+//   const isValidPassword = await bcrypt.compare(password, user.passwordHash);
+
+//   if (!isValidPassword) {
+//     throw new Error("Invalid email or password");
+//   }
+
+//   const token = generateToken(user.id, user.email);
+
+//   return {
+//     token,
+//     user: {
+//       id: user.id,
+//       name: user.name,
+//       email: user.email,
+//       role: user.role,
+//     },
+//   };
+// };
 export const loginUser = async (email: string, password: string) => {
+  const totalStart = Date.now();
+
+  const dbStart = Date.now();
+
   const user = await prisma.user.findUnique({
     where: { email },
   });
+
+  console.log("DB Query:", Date.now() - dbStart, "ms");
 
   if (!user) {
     throw new Error("Invalid email or password");
@@ -38,13 +75,41 @@ export const loginUser = async (email: string, password: string) => {
     throw new Error("This account uses Google Sign-In");
   }
 
-  const isValidPassword = await bcrypt.compare(password, user.passwordHash);
+  const bcryptStart = Date.now();
+
+  const isValidPassword = await bcrypt.compare(
+    password,
+    user.passwordHash
+  );
+
+  console.log(
+    "bcrypt compare:",
+    Date.now() - bcryptStart,
+    "ms"
+  );
 
   if (!isValidPassword) {
     throw new Error("Invalid email or password");
   }
 
-  const token = generateToken(user.id, user.email);
+  const jwtStart = Date.now();
+
+  const token = generateToken(
+    user.id,
+    user.email
+  );
+
+  console.log(
+    "JWT:",
+    Date.now() - jwtStart,
+    "ms"
+  );
+
+  console.log(
+    "TOTAL LOGIN:",
+    Date.now() - totalStart,
+    "ms"
+  );
 
   return {
     token,
