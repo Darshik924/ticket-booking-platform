@@ -40,12 +40,13 @@ app.get("/health", async (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/events", eventRouter);
 app.use("/api/seats", seatRouter);
-<<<<<<< HEAD
+//HEAD
 app.use("/api/booking", bookingRouter);
 app.use("/api/payment", paymentRouter);
-=======
+
 app.use("/api/bookings", bookingRouter);
->>>>>>> origin/main
+
+// origin/main
 
 const PORT = process.env.PORT || 5000;
 
