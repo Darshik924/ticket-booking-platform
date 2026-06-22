@@ -7,10 +7,17 @@ let io: Server;
 export const initSocket = (server: HttpServer) => {
   io = new Server(server, {
     cors: {
-      origin: "*",
+      // 1. Swap the "*" wildcard out for your exact frontend URL
+      origin: process.env.FRONTEND_URL || "http://localhost:3000",
+      
+      // 2. Explicitly allow credentials/cookies to pass through
+      credentials: true,
+      
       methods: ["GET", "POST"],
     },
   });
+
+  // ... (leave the rest of your middleware and connection logic exactly the same)
 
   // JWT Middleware for Socket.IO Authentication
   io.use((socket, next) => {
