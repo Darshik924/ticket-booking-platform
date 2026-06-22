@@ -78,6 +78,15 @@ const Login = () => {
             Register
           </Link>
         </p>
+        <button
+          type="button"
+          onClick={() => {
+            window.location.href = "http://localhost:5000/api/auth/google";
+          }}
+          className="w-full mt-3 border border-gray-300 rounded-lg py-2"
+        >
+          Continue with Google
+        </button>
       </div>
     </div>
   );

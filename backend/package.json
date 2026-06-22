@@ -15,7 +15,7 @@
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^6.10.1",
-    "bcryptjs": "^3.0.3",
+    "bcrypt": "^6.0.0",
     "bullmq": "^5.78.1",
     "compression": "^1.8.1",
     "cors": "^2.8.6",
@@ -33,7 +33,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@types/bcryptjs": "^3.0.0",
+    "@types/bcrypt": "^6.0.0",
     "@types/compression": "^1.8.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
