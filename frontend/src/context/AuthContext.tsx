@@ -10,27 +10,8 @@ import {
 
 import { api } from "../lib/api";
 import { useRouter } from "next/navigation";
-
-enum ROLE {
-  ADMIN,
-  CUSTOMER,
-}
-
-interface userType {
-  name: string;
-  id: number;
-  role: ROLE;
-  email: string;
-}
-
-interface AuthContextType {
-  user: userType | null;
-  token: string | null;
-  loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => void;
-}
+import type { userType, AuthContextType } from "../lib/types";
+import { ROLE } from "../lib/types";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -104,3 +85,4 @@ const useAuth = () => {
 };
 
 export { useAuth };
+export { ROLE };

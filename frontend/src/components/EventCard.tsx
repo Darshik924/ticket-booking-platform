@@ -11,7 +11,7 @@ const EventCard = ({ event }: { event: eventType }) => {
   return (
     <Link
       href={`/events/${event.id}`}
-      className="block bg-white rounded-xl border border-gray-200 p-5 hover:border-gray-400 hover:shadow-sm transition"
+      className="block bg-gray-50 rounded-xl border-2 border-gray-200 p-5 hover:border-gray-400 hover:shadow-sm transition"
     >
       <div className="flex justify-between items-start mb-3">
         <h3 className="font-semibold text-gray-900 text-lg">{event.name}</h3>
