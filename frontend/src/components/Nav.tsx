@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ROLE } from "../context/AuthContext";
 import { useAuth } from "@/context/AuthContext";
 
 const Nav = () => {
@@ -13,6 +14,21 @@ const Nav = () => {
       </Link>
 
       <div className="flex items-center gap-4">
+        {user?.role === ROLE.ADMIN && (
+          <Link
+            href="/admin"
+            className="text-sm text-green-600 hover:text-green-900"
+          >
+            EditEvents
+          </Link>
+        )}
+
+        <Link
+          href="/events"
+          className="text-sm text-gray-600 hover:text-gray-900"
+        >
+          Events
+        </Link>
         <Link
           href="/bookings"
           className="text-sm text-gray-600 hover:text-gray-900"
