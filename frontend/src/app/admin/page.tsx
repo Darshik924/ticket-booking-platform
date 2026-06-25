@@ -136,6 +136,16 @@ const Admin = () => {
       return;
     }
 
+    if (
+      selectedEvent &&
+      Number(formEvent.totalSeats) < selectedEvent.availableSeats
+    ) {
+      setFormError(
+        `Total seats cannot be lower than current available seats (${selectedEvent.availableSeats}).`,
+      );
+      return;
+    }
+
     setActionLoading(true);
     setPageError("");
     setFormError("");
