@@ -56,13 +56,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const { token, user } = res.data;
 
-    const googleAuthLogin = (token: string, user: userType) => {
     localStorage.setItem("token", token);
     localStorage.setItem("user", JSON.stringify(user));
 
     setToken(token);
     setUser(user);
-    }
 
     router.push("/events");
   };

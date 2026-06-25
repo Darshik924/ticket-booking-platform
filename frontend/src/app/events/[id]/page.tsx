@@ -1,11 +1,12 @@
 "use client"; // Runs in browser (needed for hooks like useEffect/useState)
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState, use, useCallback } from "react";
 import { api } from "@/lib/api";
 import { eventType, seatType } from "@/lib/types";
 import Navbar from "@/components/Nav";
 import SeatLockInfo from "@/components/SeatLockInfo";
 import PaymentQueuePanel from "@/components/PaymentQueuePanel";
+import MapQueuePanel from "@/components/MapQueuePanel";
 import { socket } from "@/lib/socket"; //our socket manager
 
 interface PageProps {
@@ -43,18 +44,52 @@ const EventDetails = ({ params }: PageProps) => {
   });
   const [isLocking, setIsLocking] = useState(false); // Prevents spamming button clicks
 
+  // --- SEAT MAP WAITING QUEUE STATE ---
+  const [mapQueueState, setMapQueueState] = useState<{
+    isWaiting: boolean;
+    position: number | null;
+    message: string;
+    connectionType: "websocket" | "polling" | "none";
+  }>({
+    isWaiting: false,
+    position: null,
+    message: "",
+    connectionType: "none",
+  });
+
+  // --- FETCH SEATS MAP ---
+  const fetchSeats = useCallback(async () => {
+    try {
+      const response = await api.get(`/api/events/${id}/seats`);
+      if (response.data.status === "WAITING") {
+        setMapQueueState((prev) => ({
+          ...prev,
+          isWaiting: true,
+          position: response.data.queuePosition,
+          message: response.data.message || "You are in the waiting queue.",
+        }));
+      } else {
+        setMapQueueState((prev) => ({
+          ...prev,
+          isWaiting: false,
+          position: null,
+          message: "",
+        }));
+        setSeats(response.data.seats || []);
+      }
+    } catch (err) {
+      console.error("Failed to load seats map:", err);
+      setError("Failed to load seats map.");
+    }
+  }, [id]);
+
   // --- FETCH DATA ON LOAD ---
   useEffect(() => {
     const fetchPageData = async () => {
       try {
-        // Promise.all runs both API requests at the exact same time
-        const [eventResponse, seatsResponse] = await Promise.all([
-          api.get(`/api/events/${id}`),
-          api.get(`/api/events/${id}/seats`),
-        ]);
-
+        const eventResponse = await api.get(`/api/events/${id}`);
         setEvent(eventResponse.data.event);
-        setSeats(seatsResponse.data.seats); // Storing the 500 seats array
+        await fetchSeats();
       } catch (err) {
         setError("Failed to load event details.");
       } finally {
@@ -68,12 +103,21 @@ const EventDetails = ({ params }: PageProps) => {
     const token = localStorage.getItem("token");
     if (token) {
       socket.auth = { token };
+      socket.connect();
+    } else {
+      setMapQueueState((prev) => ({
+        ...prev,
+        connectionType: "polling",
+      }));
     }
-    socket.connect();
 
     socket.on("connect", () => {
       console.log("Socket connected", socket.id);
       socket.emit("join_event_queue", id);
+      setMapQueueState((prev) => ({
+        ...prev,
+        connectionType: "websocket",
+      }));
     });
 
     socket.on("connect_error", (error: any) => {
@@ -83,6 +127,10 @@ const EventDetails = ({ params }: PageProps) => {
         status: "failed",
         message: "Socket connection failed. Real-time queue updates may not be available.",
         position: current.position,
+      }));
+      setMapQueueState((prev) => ({
+        ...prev,
+        connectionType: "polling",
       }));
     });
 
@@ -116,34 +164,29 @@ const EventDetails = ({ params }: PageProps) => {
       alert(`❌ Oh no! ${payload.message}`);
     });
 
-    // Listen for the real time queue updates from queueService.ts and update our queueState and then pass it directly to our universal component
+    // Listen for the real time queue updates from queueService.ts and update our mapQueueState
     socket.on("queue_update", (payload: any) => {
-      console.log("Queue update received:", payload);
-      setQueueState((current) => ({
-        ...current,
-        status: payload.status?.toLowerCase() ?? "waiting",
-        message: payload.message ?? current.message,
-        position: payload.queuePosition ?? current.position,
+      console.log("Queue update received for map queue:", payload);
+      setMapQueueState((prev) => ({
+        ...prev,
+        position: payload.queuePosition ?? prev.position,
+        message: payload.message ?? prev.message,
       }));
     });
 
     socket.on("queue_promoted", (payload: any) => {
-      console.log("Queue promoted received:", payload);
-      setQueueState((current) => ({
-        ...current,
-        status: "processing",
-        message:
-          payload.message ?? "Your payment queue request is now processing.",
-        position: payload.queuePosition ?? current.position,
+      console.log("Queue promoted received for map queue:", payload);
+      setMapQueueState((prev) => ({
+        ...prev,
+        isWaiting: false,
+        position: null,
+        message: payload.message || "",
       }));
+      fetchSeats();
     });
 
     socket.on("queue_moved", (payload: any) => {
       console.log("Queue moved received:", payload);
-      setQueueState((current) => ({
-        ...current,
-        message: payload.message ?? current.message,
-      }));
     });
 
     //cleanUp channnel on leave :always turn off walkie-talkies when leaving the page
@@ -158,7 +201,52 @@ const EventDetails = ({ params }: PageProps) => {
       socket.off("queue_moved");
       socket.disconnect();
     };
-  }, [id]);
+  }, [id, fetchSeats]);
+
+  // Polling fallback when user is waiting in seat map queue
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+
+    if (mapQueueState.isWaiting) {
+      // Set connection type to polling if it's still 'none' after 2 seconds
+      const timeoutId = setTimeout(() => {
+        setMapQueueState((prev) => {
+          if (prev.connectionType === "none") {
+            return { ...prev, connectionType: "polling" };
+          }
+          return prev;
+        });
+      }, 2000);
+
+      intervalId = setInterval(async () => {
+        try {
+          const response = await api.get(`/api/events/${id}/seats`);
+          if (response.data.status === "ACTIVE") {
+            setMapQueueState((prev) => ({
+              ...prev,
+              isWaiting: false,
+              position: null,
+              message: "",
+            }));
+            setSeats(response.data.seats || []);
+          } else if (response.data.status === "WAITING") {
+            setMapQueueState((prev) => ({
+              ...prev,
+              position: response.data.queuePosition,
+              message: response.data.message || prev.message,
+            }));
+          }
+        } catch (err) {
+          console.error("Polling seat map failed:", err);
+        }
+      }, 5000);
+
+      return () => {
+        clearTimeout(timeoutId);
+        clearInterval(intervalId);
+      };
+    }
+  }, [mapQueueState.isWaiting, id]);
 
   // --- REDIS LOCK API CALL ---
   // --- FULL UPDATED FLOW: REDIS LOCK + BULLMQ CHECKOUT QUEUE ---
@@ -279,7 +367,13 @@ const EventDetails = ({ params }: PageProps) => {
                 Available: {event.availableSeats} / {event.totalSeats}
               </p>
 
-              {!reservedSeat && !showQueue ? (
+              {mapQueueState.isWaiting ? (
+                <MapQueuePanel
+                  queuePosition={mapQueueState.position}
+                  message={mapQueueState.message}
+                  connectionType={mapQueueState.connectionType}
+                />
+              ) : !reservedSeat && !showQueue ? (
                 <>
                   {/* SEAT GRID (10 columns across) */}
                   <div className="grid grid-cols-10 gap-2 max-h-100 overflow-y-auto p-4 bg-gray-50 rounded-lg border border-gray-100">
