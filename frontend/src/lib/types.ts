@@ -41,12 +41,10 @@ interface bookingType {
   createdAt: string;
   seat: {
     seatNumber: string;
-    event: {
-      name: string;
-      venue: string;
-      date: string;
-    };
+     eventId: number;    // ✅ only eventId, no event object
+     event?: eventType; // Optional event object, can be undefined
   };
+  
 }
 
 export type { eventType, seatType, bookingType, userType, AuthContextType };

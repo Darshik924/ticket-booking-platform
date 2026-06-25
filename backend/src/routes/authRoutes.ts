@@ -35,7 +35,7 @@ router.get(
     const encodedUser = encodeURIComponent(JSON.stringify(user));
 
     res.redirect(
-      `http://localhost:3001/auth/callback?token=${token}&user=${encodedUser}`,
+      `http://localhost:3000/auth/callback?token=${token}&user=${encodedUser}`,
     );
   },
 );
