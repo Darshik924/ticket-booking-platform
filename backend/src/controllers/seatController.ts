@@ -69,8 +69,8 @@ const getSeatMap = async (req: Request, res: Response) => {
   let isActive = await redisClient.sismember(activeKey, queueUserId);
 
   if (!isActive) {
-    // Push them to the Redis sorted set (waiting queue) with timestamp as score
-    await redisClient.zadd(queueKey, Date.now(), queueUserId);
+    // Push them to the Redis sorted set (waiting queue) with timestamp as score only if they don't exist
+    await redisClient.zadd(queueKey, "NX", Date.now(), queueUserId);
 
     // Try to promote users from queue to active pool
     const activeCount = await redisClient.scard(activeKey);

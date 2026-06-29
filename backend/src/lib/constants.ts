@@ -10,7 +10,7 @@ const REDIS_KEYS = {
 };
 
 export const LOCK_TTL_SECONDS = 300; // 5 minutes
-export const MAX_ACTIVE_USERS = 50; // Max Users that are allowed past waiting room at once
+export const MAX_ACTIVE_USERS = 1; // Max Users that are allowed past waiting room at once
 export const QUEUE_POLL_INTERVAL_MS = 5000; // How often frontend will polls queue position
 
 export { REDIS_KEYS };
