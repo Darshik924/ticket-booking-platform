@@ -8,7 +8,6 @@ import {
   releaseYourSeatLock,
 } from "../services/seatLock.service";
 
-
 export const createBooking = async (userId: number, seatId: number) => {
   const seat = await prisma.seat.findUnique({
     where: {
@@ -16,29 +15,22 @@ export const createBooking = async (userId: number, seatId: number) => {
     },
   });
 
-
-
   if (!seat) {
     throw new Error("Seat not found");
   }
 
-  //verify lock ownerShip 
-  const lockHolder = await getLockHolder(
-    seat.eventId,
-    seat.id
-  );
+  //verify lock ownerShip
+  const lockHolder = await getLockHolder(seat.eventId, seat.id);
 
   if (!lockHolder || Number(lockHolder) !== userId) {
-    throw new Error(
-      "You dont own this seat lock"
-    );
+    throw new Error("You dont own this seat lock");
   }
 
   if (seat.status !== "AVAILABLE") {
     throw new Error("seat is not AVAILABLE");
   }
 
-  // tx->transaction client -->insure that both the booking and the update of the seat take place together if any fails then both fails 
+  // tx->transaction client -->insure that both the booking and the update of the seat take place together if any fails then both fails
   const booking = await prisma.$transaction(async (tx) => {
     const booking = await tx.booking.create({
       data: {
@@ -56,7 +48,7 @@ export const createBooking = async (userId: number, seatId: number) => {
       },
     });
     return booking;
-  })
+  });
 
   // Update the seat status in the Redis Hash cache
   const hashKey = REDIS_KEYS.eventSeats(seat.eventId);
@@ -72,21 +64,13 @@ export const createBooking = async (userId: number, seatId: number) => {
   await redisClient.srem(activeKey, String(userId));
 
   promoteQueueAndNotify(seat.eventId).catch((err) =>
-    console.error("Queue promotion failed:", err)
+    console.error("Queue promotion failed:", err),
   );
 
-
-
-
-  //release a redis lock 
-  await releaseYourSeatLock(
-    seat.eventId,
-    seat.id,
-    userId
-  );
+  //release a redis lock
+  await releaseYourSeatLock(seat.eventId, seat.id, userId);
 
   return booking;
-
 };
 
 //get your existing bookings
@@ -97,7 +81,11 @@ export const getMyBookings = async (userId: number) => {
       userId,
     },
     include: {
-      seat: true,
+      seat: {
+        include: {
+          event: true,
+        },
+      },
     },
   });
 
@@ -147,27 +135,25 @@ export const cancelBooking = async (bookingId: number, userId: number) => {
   // tx -> transaction client  both bookings cancelled and seat available again should happen together if any fails then both fails
   const updateBooking = await prisma.$transaction(async (tx) => {
     //update booking status to cancelled
-    const updateBooking = await tx.booking.update
-      ({
-        where: {
-          id: bookingId,
-        },
-        data: {
-          status: "CANCELLED",
-        },
-      });
+    const updateBooking = await tx.booking.update({
+      where: {
+        id: bookingId,
+      },
+      data: {
+        status: "CANCELLED",
+      },
+    });
 
     // make the seat available again
     await tx.seat.update({
       where: {
-        id: booking.seatId,  //remember that seatId is not a bookingId
+        id: booking.seatId, //remember that seatId is not a bookingId
       },
       data: {
         status: "AVAILABLE",
       },
     });
     return updateBooking;
-
   });
 
   // Update the seat status in the Redis Hash cache
@@ -177,7 +163,11 @@ export const cancelBooking = async (bookingId: number, userId: number) => {
     if (seatVal) {
       const colonIdx = seatVal.indexOf(":");
       const seatNumber = seatVal.substring(0, colonIdx);
-      await redisClient.hset(hashKey, String(booking.seatId), `${seatNumber}:AVAILABLE`);
+      await redisClient.hset(
+        hashKey,
+        String(booking.seatId),
+        `${seatNumber}:AVAILABLE`,
+      );
     }
   }
 

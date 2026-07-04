@@ -18,4 +18,22 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// GET /api/bookings/my → getMyBookingsHandler
+export const fetchMyBookings = async ()=>{
+  const res = await api.get(`/api/bookings/my`);
+  return res.data;
+  //token is auto attached to it by api.interceptors
+};
+
+// GET /api/bookings/:id → getBookingByIdHandler
+export const fetchBookingById = async(id:number)=>{
+  const res = await api.get(`/api/bookings/${id}`);
+  return res.data;
+};
+
+// DELETE /api/bookings/:id → cancelBookingHandler
+export const cancelMyBooking = async(id:number)=>{
+  const res = await api.delete(`/api/bookings/${id}`);
+}
+
 export { api };

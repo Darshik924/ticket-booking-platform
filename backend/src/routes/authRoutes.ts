@@ -1,9 +1,5 @@
 import { Router } from "express";
-import {
-  register,
-  login,
-  getProfile,
-} from "../controllers/authController";
+import { register, login, getProfile } from "../controllers/authController";
 import passport from "passport";
 import { success } from "zod";
 import { authenticateUser } from "../middlewares/authMiddleware";
@@ -20,21 +16,28 @@ router.post("/login", login);
 router.get("/me", authenticateUser, getProfile);
 
 //google login route
-router.get("/google", passport.authenticate("google",{
-  scope:["profile","email"],
-})
+router.get(
+  "/google",
+  passport.authenticate("google", {
+    scope: ["profile", "email"],
+  }),
 );
 
 //google callback
-router.get("/google/callback",
-  passport.authenticate("google",{
-    session :false, 
+router.get(
+  "/google/callback",
+  passport.authenticate("google", {
+    session: false,
   }),
-  (req,res)=>{
-    
-      res.status(200).json(req.user);
-  
-  }
+  (req, res) => {
+    const { token, user } = req.user as any;
+
+    const encodedUser = encodeURIComponent(JSON.stringify(user));
+
+    res.redirect(
+      `http://localhost:3000/auth/callback?token=${token}&user=${encodedUser}`,
+    );
+  },
 );
 
 export default router;

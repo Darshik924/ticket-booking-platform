@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { redisClient } from "../lib/redis";
 import { prisma } from "../lib/prisma";
-import { REDIS_KEYS, MAX_ACTIVE_USERS } from "../lib/constants";
+import { REDIS_KEYS, MAX_ACTIVE_USERS, QUEUE_TTL_SECONDS } from "../lib/constants";
 import { getIntegerId } from "../utils/getIntegerIds";
 import { AuthRequest } from "../middlewares/authMiddleware";
 import jwt from "jsonwebtoken";
@@ -69,8 +69,14 @@ const getSeatMap = async (req: Request, res: Response) => {
   let isActive = await redisClient.sismember(activeKey, queueUserId);
 
   if (!isActive) {
-    // Push them to the Redis sorted set (waiting queue) with timestamp as score
-    await redisClient.zadd(queueKey, Date.now(), queueUserId);
+    // Push them to the Redis sorted set (waiting queue) with timestamp as score only if they don't exist
+    await redisClient.zadd(queueKey, "NX", Date.now(), queueUserId);
+
+    // Check if the waiting queue has a TTL set, if not, set it
+    const ttl = await redisClient.ttl(queueKey);
+    if (ttl === -1) {
+      await redisClient.expire(queueKey, QUEUE_TTL_SECONDS);
+    }
 
     // Try to promote users from queue to active pool
     const activeCount = await redisClient.scard(activeKey);

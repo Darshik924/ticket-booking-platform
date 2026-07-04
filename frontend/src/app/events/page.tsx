@@ -22,6 +22,7 @@ const Event = () => {
         setEvents(res.data.events);
       } catch (err) {
         setError("Failed to load events");
+        console.error(error);
       } finally {
         setLoading(false);
       }
