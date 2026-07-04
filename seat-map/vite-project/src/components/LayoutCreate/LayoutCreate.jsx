@@ -3,7 +3,7 @@ import panzoom from 'panzoom'
 import ImageUpload from '../ImageUpload/ImageUpload.jsx'
 import { Link } from 'react-router-dom'
 
-function LayoutCreate({setDisplayLayout,setformData}) {
+function LayoutCreate({ setDisplayLayout, setformData }) {
   const [count, setCount] = useState(0)
   const [radius, setRadius] = useState([])
   const [inverted, setInverted] = useState([])
@@ -44,27 +44,28 @@ function LayoutCreate({setDisplayLayout,setformData}) {
 
   // Global click delegation handler on the SVG groups
   const handleSeatClick = (e, groupIdx, index) => {
-    const seat = e.target.closest('circle');
+    const seat = e.target.closest('circle')
     if (!seat) return;
 
-    const row = parseInt(seat.dataset.row, 10);
-    const col = parseInt(seat.dataset.col, 10);
-    const secIdx = index; // pulled from your current context loop mapping over sectionName
-    const grpIdx = groupIdx;
+    const row = parseInt(seat.dataset.row, 10)
+    const col = parseInt(seat.dataset.col, 10)
+    const secIdx = index
+    const grpIdx = groupIdx
 
     const seatKey = `${secIdx}_${grpIdx}_${col}_${row}`;
 
     // If holding Shift or Ctrl/Cmd key, toggle multi-select mode for deletion
-    if (e.shiftKey || e.ctrlKey || e.metaKey) {
-      setSelectedSeats((prev) => {
-        const next = new Set(prev);
-        if (next.has(seatKey)) next.delete(seatKey);
-        else next.add(seatKey);
-        return next;
-      });
-    } else {
-      // Here you can pull existing metadata from your state if saved, or pass coordinates
-      setEditingSeat({ secIdx, grpIdx, col, row, seatKey });
+    if (!sectionName[secIdx].seatDone) {
+      if (e.shiftKey || e.ctrlKey || e.metaKey) {
+        setSelectedSeats((prev) => {
+          const next = new Set(prev);
+          if (next.has(seatKey)) next.delete(seatKey);
+          else next.add(seatKey);
+          return next;
+        });
+      } else {
+        setEditingSeat({ secIdx, grpIdx, col, row, seatKey });
+      }
     }
   };
 
@@ -303,8 +304,8 @@ function LayoutCreate({setDisplayLayout,setformData}) {
       seatLayout[sectionName[idx].text].d = d
     }
     console.log(seatLayout)
-    setformData((prev)=>{
-      const newData = {...prev, seatLayout}
+    setformData((prev) => {
+      const newData = { ...prev, seatLayout }
       console.log(newData)
       return newData
     })
@@ -329,8 +330,8 @@ function LayoutCreate({setDisplayLayout,setformData}) {
     const centerX = polygonPoints[0][0].x
     const centerY = polygonPoints[0][0].y
 
-    console.log(centerX,centerY)
-    console.log(textX,textY)
+    console.log(centerX, centerY)
+    console.log(textX, textY)
 
     // 3. Calculate your ideal target scale factor (assuming 800x800 canvas)
     const scaleX = 800 / box.width;
@@ -499,6 +500,7 @@ function LayoutCreate({setDisplayLayout,setformData}) {
                             deletedSeats: []
                           })
                           setSectionName(newSectionName)
+                          alert("Press CTRL or SHIFT and then click on seat to delete")
                         }} >Generate Seat Layout</button>
 
                         {sectionName[index].seats.length > 0 && (
@@ -592,7 +594,7 @@ function LayoutCreate({setDisplayLayout,setformData}) {
 
 
                             {/* Individual Seat Property Editor Panel */}
-                            {editingSeat && (
+                            {(editingSeat && editingSeat.secIdx === index) && (
                               <div className="m-2 w-fit border rounded p-1">
                                 <h3 className='m-1 ml-0 w-fit underline'>Edit Seat Details</h3>
                                 <div className='ml-1 w-fit'>Layout Index: {editingSeat.grpIdx + 1} | Row: {editingSeat.row + 1} | Col: {editingSeat.col + 1}</div>
@@ -610,22 +612,24 @@ function LayoutCreate({setDisplayLayout,setformData}) {
                                 <div className='w-fit'>
                                   <label className='m-1'>Tier Category:</label>
                                   <select className='border m-1 border-white rounded' ref={(el) => { seatTierRef.current[index] = el }}>
+                                    <option value="none">None</option>
                                     <option value="vip">VIP</option>
                                     <option value="premium">Premium</option>
                                     <option value="standard">Standard</option>
-                                    <option value="none">None</option>
                                   </select>
                                 </div>
 
 
                                 <button onClick={() => {
                                   let newSectionName = [...sectionName]
-                                  let seatName = seatNameRef.current[index]?.value.trim()
-                                  let seatPrice = seatPriceRef.current[index]?.value.trim()
+                                  let seatName = seatNameRef.current[index]?.value.trim() || `row:${editingSeat.row}-col:${editingSeat.col}`
+                                  let seatPrice = seatPriceRef.current[index]?.value.trim() || newSectionName[index].price
                                   let seatTier = seatTierRef.current[index]?.value.trim()
                                   newSectionName[index].seats[editingSeat.grpIdx].seat_data[`row${editingSeat.row}-col${editingSeat.col}`] = { seatName, seatPrice, seatTier }
                                   setSectionName(newSectionName)
-                                  setEditingSeat(null)
+                                  if (seatPrice) {
+                                    setEditingSeat(null)
+                                  }
                                 }} className='border m-1 border-white rounded pl-1 pr-1 cursor-pointer bg-green-900'>Save Details</button>
 
                                 <button onClick={() => setEditingSeat(null)} className='border m-1 border-white rounded pl-1 pr-1 cursor-pointer bg-[#765817]'>Cancel</button>
@@ -641,32 +645,38 @@ function LayoutCreate({setDisplayLayout,setformData}) {
                             )}
                             <button className='border rounded-2xl bg-[#183a67] pl-2 pr-2 ml-5 mb-2 cursor-pointer' onClick={() => {
                               let newSectionName = [...sectionName]
+                              if (editingSeat.secIdx === index) {
+                                setEditingSeat(null)
+                              }
                               newSectionName[index].seatDone = true
                               for (let seat of newSectionName[index].seats) {
                                 for (let i = 0; i < seat.rows; i++) {
                                   for (let j = 0; j < seat.columns; j++) {
-                                    if (seat.type === 'linear') {
-                                      if (seat.seat_data[`row${i}-col${j}`]) {
-                                        seat.seat_data[`row${i}-col${j}`].x = seat.seatRadius * (2 * j + 1) + seat.colGap * j
-                                        seat.seat_data[`row${i}-col${j}`].y = seat.seatRadius * (2 * i + 1) + seat.rowGap * i
+                                    const key = `row${i}-col${j}`
+                                    if (!seat.deletedSeats.includes(key)) {
+                                      if (seat.type === 'linear') {
+                                        if (seat.seat_data[key]) {
+                                          seat.seat_data[key].x = seat.seatRadius * (2 * j + 1) + seat.colGap * j
+                                          seat.seat_data[key].y = seat.seatRadius * (2 * i + 1) + seat.rowGap * i
+                                        }
+                                        else {
+                                          seat.seat_data[key] = { x: seat.seatRadius * (2 * j + 1) + seat.colGap * j, y: seat.seatRadius * (2 * i + 1) + seat.rowGap * i, seatName: `row:${i + 1}-col:${j + 1}`, seatPrice: newSectionName[index].price, seatTier: "none" }
+                                        }
                                       }
                                       else {
-                                        seat.seat_data[`row${i}-col${j}`] = { x: seat.seatRadius * (2 * j + 1) + seat.colGap * j, y: seat.seatRadius * (2 * i + 1) + seat.rowGap * i }
-                                      }
-                                    }
-                                    else {
-                                      let colLength = (2 * seat.rows - 1) * seat.seatRadius + (seat.rows - 1) * seat.rowGap + seat.layoutRadius
-                                      let angle = (seat.seatRadius * (2 * j) + seat.colGap * j) / seat.layoutRadius
-                                      let sin = Math.sin(angle)
-                                      let cos = Math.cos(angle)
-                                      if (seat.seat_data[`row${i}-col${j}`]) {
-                                        seat.seat_data[`row${i}-col${j}`].x = (colLength - (seat.seatRadius * (2 * i + 1) + seat.rowGap * i)) * sin + seat.seatRadius
-                                        seat.seat_data[`row${i}-col${j}`].y = colLength - (colLength - (seat.seatRadius * (2 * i + 1) + seat.rowGap * i)) * cos
-                                      }
-                                      else {
-                                        seat.seat_data[`row${i}-col${j}`] = { x: (colLength - (seat.seatRadius * (2 * i + 1) + seat.rowGap * i)) * sin + seat.seatRadius, y: colLength - (colLength - (seat.seatRadius * (2 * i + 1) + seat.rowGap * i)) * cos }
-                                      }
+                                        let colLength = (2 * seat.rows - 1) * seat.seatRadius + (seat.rows - 1) * seat.rowGap + seat.layoutRadius
+                                        let angle = (seat.seatRadius * (2 * j) + seat.colGap * j) / seat.layoutRadius
+                                        let sin = Math.sin(angle)
+                                        let cos = Math.cos(angle)
+                                        if (seat.seat_data[key]) {
+                                          seat.seat_data[key].x = (colLength - (seat.seatRadius * (2 * i + 1) + seat.rowGap * i)) * sin + seat.seatRadius
+                                          seat.seat_data[key].y = colLength - (colLength - (seat.seatRadius * (2 * i + 1) + seat.rowGap * i)) * cos
+                                        }
+                                        else {
+                                          seat.seat_data[key] = { x: (colLength - (seat.seatRadius * (2 * i + 1) + seat.rowGap * i)) * sin + seat.seatRadius, y: colLength - (colLength - (seat.seatRadius * (2 * i + 1) + seat.rowGap * i)) * cos, seatName: `row:${i + 1}-col:${j + 1}`, seatPrice: newSectionName[index].price, seatTier: "none" }
+                                        }
 
+                                      }
                                     }
                                   }
                                 }
@@ -722,7 +732,7 @@ function LayoutCreate({setDisplayLayout,setformData}) {
                     (<div className='m-1'>
 
                       <label htmlFor='sectionName'>Enter Section Name</label>
-                      <input type="text" id='sectionName' ref={(el)=>{sectionNameInput.current[index] = el}} className='border border-white rounded ml-1 pl-1' />
+                      <input type="text" id='sectionName' ref={(el) => { sectionNameInput.current[index] = el }} className='border border-white rounded ml-1 pl-1' />
 
                       <button className="cursor-pointer border border-white bg-amber-300 text-white pl-2 pr-2 rounded m-1" onClick={() => {
                         let newSectionName = [...sectionName]
@@ -766,12 +776,12 @@ function LayoutCreate({setDisplayLayout,setformData}) {
 
                       <div>
                         <label htmlFor='sectionPrice'>Enter Section Price (₹)</label>
-                        <input type="text" id='sectionPrice' ref={(el)=>{sectionPriceInput.current[index]= el}} className='border border-white rounded m-1 pl-1' />
+                        <input type="Number" min={0} id='sectionPrice' ref={(el) => { sectionPriceInput.current[index] = el }} className='border border-white rounded m-1 pl-1' />
                       </div>
                       <button className='pl-2 pr-2 m-2 block border border-white rounded-2xl bg-red-900 cursor-pointer' onClick={() => {
                         let newSectionName = [...sectionName]
                         newSectionName[index].done = true
-                        newSectionName[index].price = Number(sectionPriceInput.current[index].value.trim())
+                        newSectionName[index].price = (sectionPriceInput.current[index].value.trim())
                         setSectionName(newSectionName)
                       }}>Done</button>
                     </div>)
@@ -899,7 +909,7 @@ function LayoutCreate({setDisplayLayout,setformData}) {
                                           fillColor = '#ff4d4f'
                                         } else if (isEditing) {
                                           fillColor = '#1DB954'
-                                        } else if (ele.seat_data[`row${row_idx}-col${col_idx}`]?.seatName) {
+                                        } else if (ele.seat_data[`row${row_idx}-col${col_idx}`]?.seatName && (ele.seat_data[`row${row_idx}-col${col_idx}`]?.seatName !== `row:${row_idx + 1}-col:${col_idx + 1}`)) {
                                           fillColor = '#FFAC1C'
                                         } else {
                                           fillColor = '#1890ff'

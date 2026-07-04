@@ -18,11 +18,11 @@ const router = createBrowserRouter(
       <Route path='seatLayout' element={<LayoutCreate />} />
       <Route path='venue/:type' element={<Venue />} />
       <Route path='list/:type' element={<List />} />
+      <Route path='layoutDisplay' element={<LayoutDisplay />} />
     </Route>
   )
 )
 
 createRoot(document.getElementById('root')).render(
   <RouterProvider router={router} />
-  // <LayoutDisplay/>
 )
