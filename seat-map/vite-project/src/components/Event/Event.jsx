@@ -1,9 +1,10 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef, Fragment } from 'react'
 import ImageUpload from '../ImageUpload/ImageUpload'
 import { Link, useParams } from 'react-router-dom'
 import Venue from '../Venue/Venue.jsx'
 import axios from 'axios'
 import LayoutCreate from '../LayoutCreate/LayoutCreate.jsx'
+import LayoutDisplay from '../LayoutDisplay/LayoutDisplay.jsx'
 
 function Event() {
   const fileRef = useRef(null)
@@ -12,10 +13,11 @@ function Event() {
   const venues = useRef([])
   const event = useRef(null)
   const [displayVenue, setDisplayVenue] = useState(false)
-  const [displayLayout, setDisplayLayout] = useState(false)
+  const [displayLayout, setDisplayLayout] = useState('none')
   const [existingVenues, setExistingVenues] = useState([])
   const [formData, setformData] = useState(null);
   const formRef = useRef(null)
+  const [venueId,setVenueId] = useState(null)
 
   const getExistingVenues = async () => {
     const URL = 'http://localhost:5000/api/admin/getAllVenues'
@@ -60,7 +62,7 @@ function Event() {
 
   return (
     <>
-      {(!displayLayout) ? (
+      {(displayLayout === 'none') ? (
         <div className='pl-1'>
           <form action="post" ref={formRef} onSubmit={(e) => { e.preventDefault() }}>
             <div className='m-1'>
@@ -128,7 +130,7 @@ function Event() {
                 )}
                 {existingVenues.map((element, index) => {
                   return (
-                    <option value={element.id}>{`${element.name}, ${element.address}, ${element.city}, ${element.state}, ${element.country}, ${element.pincode}`}</option>
+                    <option onClick={(e) => {setVenueId(e.target.value); setDisplayLayout('display') }} value={element.id}>{`${element.name}, ${element.address}, ${element.city}, ${element.state}, ${element.country}, ${element.pincode}`}</option>
                   )
                 })}
               </select>
@@ -151,7 +153,15 @@ function Event() {
         </div>
       ) :
         (
-          <LayoutCreate setDisplayLayout={setDisplayLayout} setformData={setformData} />
+          <Fragment>
+            {(displayLayout === 'create') ? (
+              <LayoutCreate setDisplayLayout={setDisplayLayout} setformData={setformData} />
+            ) :
+              (
+                <LayoutDisplay setDisplayLayout={setDisplayLayout} setformData={setformData} venueId={venueId}/>
+              )
+            }
+          </Fragment>
         )
       }
     </>

@@ -64,7 +64,11 @@ function LayoutCreate({ setDisplayLayout, setformData }) {
           return next;
         });
       } else {
-        setEditingSeat({ secIdx, grpIdx, col, row, seatKey });
+        if(JSON.stringify(editingSeat) === JSON.stringify({ secIdx, grpIdx, col, row, seatKey })){
+          setEditingSeat(null)
+        }else{
+          setEditingSeat({ secIdx, grpIdx, col, row, seatKey });
+        }
       }
     }
   };
@@ -311,7 +315,7 @@ function LayoutCreate({ setDisplayLayout, setformData }) {
     })
 
     navigator.clipboard.writeText(JSON.stringify(seatLayout));
-    setDisplayLayout(false)
+    setDisplayLayout('none')
     alert("Saved")
   }
 
@@ -348,9 +352,9 @@ function LayoutCreate({ setDisplayLayout, setformData }) {
 
   return (
     <>
-      <div className="container flex">
+      <div className="flex">
 
-        <div className="entry z-10" pointerEvents="none">
+        <div className="w-125" pointerEvents="none">
           <ImageUpload setImage={setImage} />
 
 
@@ -509,7 +513,7 @@ function LayoutCreate({ setDisplayLayout, setformData }) {
                               {
                                 sectionName[index].seats.map((ele, idx) => {
                                   return (
-                                    <div key={idx} className=' m-1 rounded w-fit p-1 bg-[#ffffff12] border'>
+                                    <div key={idx} className=' m-1 rounded w-fit p-1 bg-[#ffffff12] flex flex-col justify-around border'>
                                       <div className='w-fit underline m-1 mt-0'>{`Seat Layout - ${idx + 1}`}</div>
                                       <div className='w-fit'>
                                         <label htmlFor={`seatRadius${index}`} className='m-1'>Seat Radius</label>
@@ -645,7 +649,7 @@ function LayoutCreate({ setDisplayLayout, setformData }) {
                             )}
                             <button className='border rounded-2xl bg-[#183a67] pl-2 pr-2 ml-5 mb-2 cursor-pointer' onClick={() => {
                               let newSectionName = [...sectionName]
-                              if (editingSeat.secIdx === index) {
+                              if (editingSeat?.secIdx === index) {
                                 setEditingSeat(null)
                               }
                               newSectionName[index].seatDone = true
@@ -660,7 +664,7 @@ function LayoutCreate({ setDisplayLayout, setformData }) {
                                           seat.seat_data[key].y = seat.seatRadius * (2 * i + 1) + seat.rowGap * i
                                         }
                                         else {
-                                          seat.seat_data[key] = { x: seat.seatRadius * (2 * j + 1) + seat.colGap * j, y: seat.seatRadius * (2 * i + 1) + seat.rowGap * i, seatName: `row:${i + 1}-col:${j + 1}`, seatPrice: newSectionName[index].price, seatTier: "none" }
+                                          seat.seat_data[key] = { x: seat.seatRadius * (2 * j + 1) + seat.colGap * j, y: seat.seatRadius * (2 * i + 1) + seat.rowGap * i, seatName: `Row-${i + 1}|Col-${j + 1}`, seatPrice: newSectionName[index].price, seatTier: "none" }
                                         }
                                       }
                                       else {

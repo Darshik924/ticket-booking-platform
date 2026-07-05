@@ -9,7 +9,7 @@ function Venue({ setDisplayLayout, setformData, formRef }) {
     const data = Object.fromEntries(formData.entries())
     setformData(data)
     console.log(data)
-    setDisplayLayout(true)
+    setDisplayLayout('create')
   }
 
   return (
