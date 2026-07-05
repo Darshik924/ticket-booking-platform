@@ -32,23 +32,31 @@ const Event = () => {
   }, [authLoading]);
 
   return (
-    <div>
+    <div className="min-h-screen bg-transparent">
       <Navbar />
 
-      <main className="max-w-5xl mx-auto px-6 py-10">
-        <h1 className="text-2xl font-semibold text-gray-900 mb-1">
-          Upcoming Events
-        </h1>
-        <p className="text-gray-500 mb-8">Pick an event and grab your seat</p>
+      <main className="mx-auto max-w-7xl px-4 py-10">
+        <div className="mb-10 rounded-[2rem] border border-border bg-card/70 p-8 shadow-sm shadow-zinc-900/5 backdrop-blur-sm">
+          <div className="max-w-3xl">
+            <h1 className="text-3xl font-bold text-foreground sm:text-4xl">
+              Upcoming Events
+            </h1>
+            <p className="mt-3 text-base text-muted-foreground sm:text-lg">
+              Pick an event and grab your seat
+            </p>
+          </div>
+        </div>
 
-        {loading && <p className="text-gray-500">Loading events...</p>}
-        {error && <p className="text-red-600">{error}</p>}
+        {loading && <p className="text-muted-foreground">Loading events...</p>}
+        {error && <p className="text-destructive">{error}</p>}
 
         {!loading && events.length === 0 && (
-          <p className="text-gray-500">No events available right now.</p>
+          <p className="text-muted-foreground">
+            No events available right now.
+          </p>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {events.map((event) => (
             <EventCard key={event.id} event={event} />
           ))}

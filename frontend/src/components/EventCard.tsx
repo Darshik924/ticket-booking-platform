@@ -11,24 +11,24 @@ const EventCard = ({ event }: { event: eventType }) => {
   return (
     <Link
       href={`/events/${event.id}`}
-      className="block bg-gray-50 rounded-xl border-2 border-gray-200 p-5 hover:border-gray-400 hover:shadow-sm transition"
+      className="block rounded-xl border border-border/60 bg-card p-6 shadow-sm transition-shadow hover:shadow-md"
     >
-      <div className="flex justify-between items-start mb-3">
-        <h3 className="font-semibold text-gray-900 text-lg">{event.name}</h3>
+      <div className="mb-4 flex items-start justify-between gap-4">
+        <h3 className="text-lg font-bold text-zinc-900">{event.name}</h3>
         {soldOut && (
-          <span className="text-xs font-medium bg-gray-100 text-gray-500 px-2 py-1 rounded-full">
+          <span className="rounded-full bg-muted px-2 py-1 text-xs font-medium text-muted-foreground">
             Sold Out
           </span>
         )}
         {!soldOut && lowStock && (
-          <span className="text-xs font-medium bg-orange-100 text-orange-700 px-2 py-1 rounded-full">
+          <span className="rounded-full bg-accent px-2 py-1 text-xs font-medium text-accent-foreground">
             Few seats left
           </span>
         )}
       </div>
 
-      <p className="text-sm text-gray-500 mb-1">{event.venue}</p>
-      <p className="text-sm text-gray-500 mb-4">
+      <p className="mb-1 text-sm text-muted-foreground">{event.venue}</p>
+      <p className="mb-6 text-sm text-muted-foreground">
         {date.toLocaleDateString("en-US", {
           month: "short",
           day: "numeric",
@@ -36,11 +36,13 @@ const EventCard = ({ event }: { event: eventType }) => {
         })}
       </p>
 
-      <div className="flex justify-between items-center text-sm">
-        <span className="text-gray-600">
+      <div className="flex items-center justify-between text-sm">
+        <span className="text-muted-foreground">
           {event.availableSeats} / {event.totalSeats} seats available
         </span>
-        <span className="text-black font-medium">View →</span>
+        <span className="font-semibold text-primary transition hover:text-primary/80">
+          View →
+        </span>
       </div>
     </Link>
   );

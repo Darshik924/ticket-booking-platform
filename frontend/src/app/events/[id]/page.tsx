@@ -125,7 +125,8 @@ const EventDetails = ({ params }: PageProps) => {
       setQueueState((current) => ({
         ...current,
         status: "failed",
-        message: "Socket connection failed. Real-time queue updates may not be available.",
+        message:
+          "Socket connection failed. Real-time queue updates may not be available.",
         position: current.position,
       }));
       setMapQueueState((prev) => ({
@@ -347,23 +348,25 @@ const EventDetails = ({ params }: PageProps) => {
     <div>
       <Navbar />
       <main className="max-w-3xl mx-auto px-6 py-10">
-        {loading && <p className="text-gray-500">Loading details...</p>}
-        {error && <p className="text-red-600">{error}</p>}
+        {loading && <p className="text-muted-foreground">Loading details...</p>}
+        {error && <p className="text-destructive">{error}</p>}
 
         {event && (
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="mb-2 text-3xl font-bold text-foreground">
               {event.name}
             </h1>
-            <p className="text-gray-600 mb-1">📍 {event.venue}</p>
-            <p className="text-gray-600 mb-6">
+            <p className="mb-1 text-muted-foreground">📍 {event.venue}</p>
+            <p className="mb-6 text-muted-foreground">
               📅 {new Date(event.date).toLocaleDateString()}
             </p>
 
             {/* SEATING BOX */}
-            <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-              <h3 className="font-semibold text-lg mb-2">Select Your Seats</h3>
-              <p className="text-sm text-gray-500 mb-6">
+            <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+              <h3 className="mb-2 text-lg font-semibold text-foreground">
+                Select Your Seats
+              </h3>
+              <p className="mb-6 text-sm text-muted-foreground">
                 Available: {event.availableSeats} / {event.totalSeats}
               </p>
 
@@ -376,16 +379,16 @@ const EventDetails = ({ params }: PageProps) => {
               ) : !reservedSeat && !showQueue ? (
                 <>
                   {/* SEAT GRID (10 columns across) */}
-                  <div className="grid grid-cols-10 gap-2 max-h-100 overflow-y-auto p-4 bg-gray-50 rounded-lg border border-gray-100">
+                  <div className="max-h-100 grid grid-cols-10 gap-2 overflow-y-auto rounded-lg border border-border bg-muted p-4">
                     {seats.map((singleSeat: seatType) => {
                       let bgColor =
-                        "bg-green-100 hover:bg-green-200 text-green-700 border-green-300";
+                        "border-secondary/30 bg-secondary/20 text-secondary-foreground hover:bg-secondary/30";
                       if (singleSeat.status === "LOCKED") {
                         bgColor =
-                          "bg-amber-100 text-amber-700 border-amber-300 cursor-not-allowed";
+                          "cursor-not-allowed border-accent/30 bg-accent/20 text-accent-foreground";
                       } else if (singleSeat.status === "BOOKED") {
                         bgColor =
-                          "bg-gray-200 text-gray-400 border-gray-300 cursor-not-allowed";
+                          "cursor-not-allowed border-border bg-gray-300 text-black/30";
                       }
 
                       const isCurrentlySelected =
@@ -397,7 +400,7 @@ const EventDetails = ({ params }: PageProps) => {
                           disabled={
                             singleSeat.status !== "AVAILABLE" || isLocking
                           }
-                          className={`flex items-center justify-center h-10 rounded text-xs font-medium border transition-all ${isCurrentlySelected ? "bg-blue-600 text-white border-blue-700 ring-2 ring-blue-300 scale-95" : bgColor}`}
+                          className={`flex h-10 items-center justify-center rounded border text-xs font-medium transition-all ${isCurrentlySelected ? "scale-95 border-primary bg-primary text-primary-foreground ring-2 ring-primary/20" : bgColor}`}
                           onClick={() => setSelectedSeat(singleSeat)}
                         >
                           {singleSeat.seatNumber}
@@ -407,36 +410,36 @@ const EventDetails = ({ params }: PageProps) => {
                   </div>
 
                   {/* LEGEND */}
-                  <div className="flex gap-4 mt-4 text-xs text-gray-600 justify-center">
+                  <div className="mt-4 flex justify-center gap-4 text-xs text-muted-foreground">
                     <div className="flex items-center gap-1">
-                      <span className="w-3 h-3 bg-green-100 border border-green-300 rounded inline-block"></span>{" "}
+                      <span className="inline-block h-3 w-3 rounded border border-secondary/30 bg-secondary/20"></span>{" "}
                       Available
                     </div>
                     <div className="flex items-center gap-1">
-                      <span className="w-3 h-3 bg-amber-100 border border-amber-300 rounded inline-block"></span>{" "}
+                      <span className="inline-block h-3 w-3 rounded border border-accent/30 bg-accent/20"></span>{" "}
                       Locked
                     </div>
                     <div className="flex items-center gap-1">
-                      <span className="w-3 h-3 bg-gray-200 border border-gray-300 rounded inline-block"></span>{" "}
+                      <span className="inline-block h-3 w-3 rounded border border-border bg-muted"></span>{" "}
                       Booked
                     </div>
                   </div>
 
                   {/* ACTION BOTTOM BAR (Shows up only when a seat is picked) */}
                   {selectedSeat && (
-                    <div className="mt-6 p-4 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-between">
+                    <div className="mt-6 flex items-center justify-between rounded-xl border border-primary/20 bg-primary/10 p-4">
                       <div>
-                        <p className="text-sm text-blue-800 font-medium">
+                        <p className="text-sm font-medium text-primary">
                           You selected seat:
                         </p>
-                        <h4 className="text-xl font-bold text-blue-900">
+                        <h4 className="text-xl font-bold text-primary">
                           {selectedSeat.seatNumber}
                         </h4>
                       </div>
                       <button
                         onClick={handleReserveSeat}
                         disabled={isLocking}
-                        className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-semibold px-5 py-2.5 rounded-lg shadow-sm transition"
+                        className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:bg-primary/60"
                       >
                         {isLocking ? "Reserving..." : "Reserve Seat"}
                       </button>
