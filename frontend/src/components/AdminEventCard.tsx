@@ -21,12 +21,14 @@ const AdminEventCard = ({
     event.availableSeats > 0 && event.availableSeats <= event.totalSeats * 0.15;
 
   return (
-    <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md">
+    <div className="rounded-3xl border border-border bg-card p-6 shadow-sm transition hover:shadow-md">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">{event.name}</h3>
-          <p className="text-sm text-gray-500">{event.venue}</p>
-          <p className="mt-2 text-sm text-gray-600">
+          <h3 className="text-lg font-semibold text-foreground">
+            {event.name}
+          </h3>
+          <p className="text-sm text-muted-foreground">{event.venue}</p>
+          <p className="mt-2 text-sm text-muted-foreground">
             {date.toLocaleDateString("en-US", {
               month: "short",
               day: "numeric",
@@ -41,30 +43,30 @@ const AdminEventCard = ({
         </div>
 
         <div className="flex flex-col items-end gap-2 text-right">
-          <span className="text-sm text-gray-500">ID #{event.id}</span>
+          <span className="text-sm text-muted-foreground">ID #{event.id}</span>
           {soldOut ? (
-            <span className="rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700">
+            <span className="rounded-full bg-destructive/10 px-3 py-1 text-xs font-semibold text-destructive">
               Sold out
             </span>
           ) : lowStock ? (
-            <span className="rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-700">
+            <span className="rounded-full bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground">
               Low stock
             </span>
           ) : (
-            <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+            <span className="rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-secondary-foreground">
               Active
             </span>
           )}
         </div>
       </div>
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-2 text-sm text-gray-600">
-        <div className="rounded-2xl bg-slate-50 p-4">
-          <p className="font-medium text-slate-900">Total seats</p>
+      <div className="mt-5 grid gap-3 text-sm text-muted-foreground sm:grid-cols-2">
+        <div className="rounded-2xl bg-muted p-4">
+          <p className="font-medium text-foreground">Total seats</p>
           <p>{event.totalSeats}</p>
         </div>
-        <div className="rounded-2xl bg-slate-50 p-4">
-          <p className="font-medium text-slate-900">Available seats</p>
+        <div className="rounded-2xl bg-muted p-4">
+          <p className="font-medium text-foreground">Available seats</p>
           <p>{event.availableSeats}</p>
         </div>
       </div>
@@ -73,7 +75,7 @@ const AdminEventCard = ({
         <button
           type="button"
           onClick={() => onEdit(event)}
-          className="rounded-2xl border border-black bg-white px-4 py-2 text-sm font-medium text-black transition hover:bg-black hover:text-white"
+          className="rounded-2xl border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition hover:bg-foreground hover:text-background"
         >
           Edit
         </button>
@@ -81,7 +83,7 @@ const AdminEventCard = ({
           type="button"
           onClick={() => onDelete(event.id)}
           disabled={isDeleting}
-          className="rounded-2xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-2 text-sm font-medium text-destructive transition hover:bg-destructive/20 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isDeleting ? "Deleting..." : "Delete"}
         </button>

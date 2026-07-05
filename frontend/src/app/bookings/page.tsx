@@ -37,19 +37,21 @@ export default function MyBookingsPage() {
   return (
     <div>
       <Navbar />
-      <main className="max-w-3xl mx-auto px-6 py-10">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">My Bookings</h1>
-        <p className="text-gray-500 mb-6">All your ticket reservations</p>
+      <main className="mx-auto max-w-3xl px-6 py-10">
+        <h1 className="mb-2 text-3xl font-bold text-foreground">My Bookings</h1>
+        <p className="mb-6 text-muted-foreground">
+          All your ticket reservations
+        </p>
 
-        <div className="flex gap-2 mb-6">
+        <div className="mb-6 flex gap-2">
           {(["all", "CONFIRMED", "CANCELLED"] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-4 py-1.5 rounded-full text-sm border transition ${
+              className={`rounded-full border px-4 py-1.5 text-sm transition ${
                 filter === f
-                  ? "bg-gray-900 text-white border-gray-900"
-                  : "border-gray-200 text-gray-500 hover:border-gray-400"
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border text-muted-foreground hover:border-primary/40"
               }`}
             >
               {f === "all" ? "All" : f.charAt(0) + f.slice(1).toLowerCase()}
@@ -57,14 +59,16 @@ export default function MyBookingsPage() {
           ))}
         </div>
 
-        {loading && <p className="text-gray-500">Loading bookings...</p>}
-        {error && <p className="text-red-600">{error}</p>}
+        {loading && (
+          <p className="text-muted-foreground">Loading bookings...</p>
+        )}
+        {error && <p className="text-destructive">{error}</p>}
 
         {!loading && !error && filtered.length === 0 && (
-          <div className="text-center py-16 text-gray-400">
-            <p className="text-4xl mb-3">🎟️</p>
-            <p className="font-medium text-gray-600">No bookings found</p>
-            <p className="text-sm mt-1">Book an event to see it here</p>
+          <div className="py-16 text-center text-muted-foreground">
+            <p className="mb-3 text-4xl">🎟️</p>
+            <p className="font-medium text-foreground">No bookings found</p>
+            <p className="mt-1 text-sm">Book an event to see it here</p>
           </div>
         )}
 
@@ -72,30 +76,30 @@ export default function MyBookingsPage() {
           {filtered.map((booking) => (
             <div
               key={booking.id}
-              className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm"
+              className="rounded-xl border border-border bg-card p-5 shadow-sm"
             >
-              <div className="flex justify-between items-start mb-3">
+              <div className="mb-3 flex items-start justify-between">
                 <div>
                   {/* 1. Event Name Header */}
-                  <h2 className="text-xl font-bold text-gray-900 mb-1">
+                  <h2 className="mb-1 text-xl font-bold text-foreground">
                     {booking.seat?.event?.name || "Untitled Event"}
                   </h2>
 
                   {/* Booking ID */}
-                  <p className="text-xs text-gray-400 mb-3">
+                  <p className="mb-3 text-xs text-muted-foreground">
                     Booking #{booking.id}
                   </p>
 
                   {/* 2. Seat Details */}
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="mt-1 text-sm text-muted-foreground">
                     🎫 Seat:{" "}
-                    <span className="font-semibold text-gray-700">
+                    <span className="font-semibold text-foreground">
                       {booking.seat?.seatNumber}
                     </span>
                   </p>
 
                   {/* 3. Event Execution Date (The day the party happens) */}
-                  <p className="text-sm text-gray-600 font-medium">
+                  <p className="text-sm font-medium text-muted-foreground">
                     📅 Event Date:{" "}
                     {booking.seat?.event?.date
                       ? new Date(booking.seat.event.date).toLocaleDateString()
@@ -103,13 +107,13 @@ export default function MyBookingsPage() {
                   </p>
 
                   {/* 4. Ticket Booking Date (The day they bought it) */}
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="mt-1 text-xs text-muted-foreground">
                     🗓️ Booked on:{" "}
                     {new Date(booking.createdAt).toLocaleDateString()}
                   </p>
                   <a
                     href={`/events/${booking.seat.eventId}`}
-                    className="text-sm text-blue-600 hover:underline mt-1 inline-block"
+                    className="mt-1 inline-block text-sm text-primary hover:underline"
                   >
                     View Event →
                   </a>
@@ -119,10 +123,10 @@ export default function MyBookingsPage() {
                   <span
                     className={`text-xs font-medium px-3 py-1 rounded-full ${
                       booking.status === "CONFIRMED"
-                        ? "bg-green-100 text-green-700"
+                        ? "bg-secondary text-secondary-foreground"
                         : booking.status === "PENDING"
-                          ? "bg-yellow-100 text-yellow-700"
-                          : "bg-red-100 text-red-600"
+                          ? "bg-accent text-accent-foreground"
+                          : "bg-destructive/10 text-destructive"
                     }`}
                   >
                     {booking.status.charAt(0) +
@@ -132,10 +136,10 @@ export default function MyBookingsPage() {
                   <span
                     className={`text-xs px-3 py-1 rounded-full ${
                       booking.paymentStatus === "PAID"
-                        ? "bg-blue-100 text-blue-700"
+                        ? "bg-primary/10 text-primary"
                         : booking.paymentStatus === "PENDING"
-                          ? "bg-orange-100 text-orange-600"
-                          : "bg-red-100 text-red-500"
+                          ? "bg-accent/20 text-accent-foreground"
+                          : "bg-destructive/10 text-destructive"
                     }`}
                   >
                     💳{" "}
@@ -145,13 +149,13 @@ export default function MyBookingsPage() {
                 </div>
               </div>
 
-              <hr className="my-3 border-gray-100" />
+              <hr className="my-3 border-border" />
 
               <div className="flex justify-end">
                 <button
                   onClick={() => handleCancel(booking.id)}
                   disabled={booking.status === "CANCELLED"}
-                  className="text-sm border border-red-200 text-red-500 rounded-lg px-4 py-2 hover:bg-red-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="rounded-lg border border-destructive/20 px-4 py-2 text-sm text-destructive transition hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   Cancel Booking
                 </button>
