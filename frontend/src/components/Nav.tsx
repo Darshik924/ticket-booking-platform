@@ -18,7 +18,7 @@ const Nav = () => {
           {user?.role === ROLE.ADMIN && (
             <Link
               href="/admin"
-              className="rounded-3xl border border-zinc-800 bg-zinc-900 px-4 py-2 text-sm font-medium text-zinc-200 transition hover:border-white/10 hover:text-white"
+              className="rounded-3xl border border-zinc-800 bg-zinc-900 px-4 py-2 text-lg font-semibold text-zinc-200 transition hover:border-white/10 hover:text-white"
             >
               EditEvents
             </Link>
@@ -26,20 +26,20 @@ const Nav = () => {
 
           <Link
             href="/events"
-            className="rounded-3xl px-4 py-2 text-sm font-medium text-zinc-400 transition hover:text-white"
+            className="rounded-3xl px-4 py-2 text-lg font-semibold text-zinc-400 transition hover:text-white"
           >
             Events
           </Link>
           <Link
             href="/bookings"
-            className="rounded-3xl px-4 py-2 text-sm font-medium text-zinc-400 transition hover:text-white"
+            className="rounded-3xl px-4 py-2 text-lg font-semibold text-zinc-400 transition hover:text-white"
           >
             My Bookings
           </Link>
-          <span className="px-2 py-2 text-sm text-zinc-400">{user?.name}</span>
+          <span className="px-2 py-2 text-lg font-light text-zinc-400/70">{user?.name}</span>
           <button
             onClick={logout}
-            className="rounded-3xl px-4 py-2 text-sm font-medium text-red-400 transition hover:text-white cursor-pointer"
+            className="rounded-3xl px-4 py-2 text-lg font-semibold text-red-400 transition hover:text-white cursor-pointer"
           >
             Logout
           </button>
