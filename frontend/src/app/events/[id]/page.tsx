@@ -304,6 +304,7 @@ const EventDetails = ({ params }: PageProps) => {
       const response = await api.post("/api/payment/pay", {
         eventId: id,
         seatId: reservedSeat.id,
+        imageUrl: event?.imageUrl,
       });
 
       console.log("Payment queue job accepted:", response.data);
