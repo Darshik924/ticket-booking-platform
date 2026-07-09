@@ -2,8 +2,8 @@
 
 import { useMemo, useState, useEffect } from "react";
 import Nav from "@/components/Nav";
-import AdminEventCard from "@/components/AdminEventCard";
-import AdminEventForm from "@/components/AdminEventForm";
+import AdminEventCard from "@/components/admin/AdminEventCard";
+import AdminEventForm from "@/components/admin/AdminEventForm";
 import AdminProtect from "@/middleware/AdminProtect";
 import { eventType } from "@/lib/types";
 import { useAuth } from "@/context/AuthContext";
@@ -191,7 +191,7 @@ const Admin = () => {
 
   return (
     <AdminProtect>
-      <div className="min-h-screen bg-gray-200">
+      <div className="min-h-screen bg-gray-800">
         <Nav />
         <main className="mx-auto max-w-7xl px-6 py-10">
           <div className="mb-10 rounded-4xl border border-border bg-card p-8 shadow-sm">
@@ -213,7 +213,7 @@ const Admin = () => {
                 type="button"
                 onClick={handleCreate}
                 disabled={actionLoading}
-                className="inline-flex items-center cursor-pointer justify-center rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center cursor-pointer justify-center rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition  hover:text-blue-950 duration-300 hover:bg-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 + New event
               </button>

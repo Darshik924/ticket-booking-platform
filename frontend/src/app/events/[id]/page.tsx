@@ -4,9 +4,9 @@ import { useEffect, useState, use, useCallback } from "react";
 import { api } from "@/lib/api";
 import { eventType, seatType } from "@/lib/types";
 import Navbar from "@/components/Nav";
-import SeatLockInfo from "@/components/SeatLockInfo";
-import PaymentQueuePanel from "@/components/PaymentQueuePanel";
-import MapQueuePanel from "@/components/MapQueuePanel";
+import SeatLockInfo from "@/components/queue/SeatLockInfo";
+import PaymentQueuePanel from "@/components/queue/PaymentQueuePanel";
+import MapQueuePanel from "@/components/queue/MapQueuePanel";
 import { socket } from "@/lib/socket"; //our socket manager
 
 interface PageProps {
