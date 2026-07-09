@@ -345,21 +345,61 @@ const EventDetails = ({ params }: PageProps) => {
   };
 
   return (
-    <div className="bg-gray-200 min-h-screen">
+    <div className="bg-gray-800 min-h-screen">
       <Navbar />
-      <main className="max-w-3xl mx-auto px-6 py-10">
+      <main className="max-w-6xl mx-auto px-6 py-10">
         {loading && <p className="text-muted-foreground">Loading details...</p>}
         {error && <p className="text-destructive">{error}</p>}
 
         {event && (
           <div>
-            <h1 className="mb-2 text-3xl font-bold text-foreground">
-              {event.name}
-            </h1>
-            <p className="mb-1 text-muted-foreground">📍 {event.venue}</p>
-            <p className="mb-6 text-muted-foreground">
-              📅 {new Date(event.date).toLocaleDateString()}
-            </p>
+            {/* HERO IMAGE SECTION */}
+            <div
+              className="relative h-96 w-full bg-cover bg-center rounded-2xl overflow-hidden border border-border shadow-lg mb-10"
+              style={{ backgroundImage: `url(${event.imageUrl})` }}
+            >
+              {/* Dark Gradient Overlay */}
+              <div className="absolute inset-0 bg-linear-to-b from-black/30 via-black/40 to-black/70"></div>
+
+              {/* Content Overlay */}
+              <div className="relative h-full flex flex-col justify-between p-8">
+                <div>
+                  <p className="text-white/80 text-sm font-medium mb-2">
+                    EVENT DETAILS
+                  </p>
+                  <h1 className="text-5xl font-bold text-white mb-3">
+                    {event.name}
+                  </h1>
+                  <p className="text-xl text-white/90 mb-4">{event.venue}</p>
+                </div>
+
+                <div className="flex items-end justify-between">
+                  <div className="text-white">
+                    <p className="text-sm text-white/80 mb-1">📅 Event Date</p>
+                    <p className="text-lg font-semibold">
+                      {new Date(event.date).toLocaleDateString("en-US", {
+                        weekday: "long",
+                        month: "long",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </p>
+                  </div>
+
+                  <div className="text-right text-white">
+                    <p className="text-sm text-white/80 mb-1">
+                      🎫 Availability
+                    </p>
+                    <p className="text-2xl font-bold">
+                      {event.availableSeats} / {event.totalSeats}
+                    </p>
+                    <p className="text-xs text-white/70 mt-1">
+                      seats available
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             {/* SEATING BOX */}
             <div className="rounded-xl border border-border bg-card p-6 shadow-sm">

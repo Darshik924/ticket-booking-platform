@@ -26,7 +26,7 @@ const EventCard = ({ event }: { event: eventType }) => {
         <motion.div
           className="relative h-48 w-full bg-cover bg-center"
           style={{ backgroundImage: `url(${imageUrl})` }}
-          whileHover={{ scale: 1.05 }} // Image zooms slightly on hover
+          whileHover={{ scale: 1.09 }} // Image zooms slightly on hover
           transition={{ duration: 0.3 }}
         >
           <div className="absolute inset-0 bg-linear-to-b from-black/40 via-black/30 to-black/60"></div>
