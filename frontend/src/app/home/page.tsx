@@ -13,6 +13,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import Footer from "@/components/Footer";
 
 const Home = () => {
   const [events, setEvents] = useState<eventType[]>([]);
@@ -166,6 +167,8 @@ const Home = () => {
           </Carousel>
         )}
       </main>
+
+      <Footer />
     </div>
   );
 };
