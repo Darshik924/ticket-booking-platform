@@ -1,24 +1,12 @@
 import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
-import { z } from "zod";
 import { getIntegerId } from "../utils/getIntegerIds";
 import { redisClient } from "../lib/redis";
 import { REDIS_KEYS } from "../lib/constants";
 
-const createEventSchema = z.object({
-  name: z.string().min(2),
-  venue: z.string().min(2),
-  date: z.string().datetime(),
-  totalSeats: z.number().int().min(1).max(10000),
-});
-
-const updateEventSchema = createEventSchema.partial();
-
 // GET /api/events/ - get all of the events
 const listAllEvents = async (req: Request, res: Response) => {
   try {
-    // We will have a query string here when the user searches for an event based on his location name
-    /* Using Query strings  */
     const events = await prisma.event.findMany({
       orderBy: { date: "asc" },
       include: {
@@ -70,14 +58,7 @@ const getEvent = async (req: Request, res: Response) => {
 
 // POST api/events/ - create events + alot Seats
 const createAnEvent = async (req: Request, res: Response) => {
-  const parsed = createEventSchema.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.flatten() });
-    return;
-  }
-  //   Validate the Schema using ZOD
-
-  const { name, venue, date, totalSeats } = parsed.data;
+  const { name, venue, date, totalSeats, imageUrl } = req.body;
 
   try {
     const event = await prisma.event.create({
@@ -86,6 +67,7 @@ const createAnEvent = async (req: Request, res: Response) => {
         venue,
         date: new Date(date),
         totalSeats,
+        imageUrl,
         seats: {
           create: Array.from({ length: totalSeats }, (_, i) => ({
             seatNumber: `A${i + 1}`,
@@ -122,16 +104,9 @@ const createAnEvent = async (req: Request, res: Response) => {
 const updateAnEvent = async (req: Request, res: Response) => {
   const { eventId } = req.params;
 
-  const parsed = updateEventSchema.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.flatten() });
-    return;
-  }
-
-  const { name, venue, date, totalSeats } = parsed.data;
+  const { name, venue, date, totalSeats, imageUrl } = req.body;
   const newId = getIntegerId(eventId);
-  // const newId = +eventId;
-  
+
   if (isNaN(newId)) {
     return res.status(400).json({ error: "Invalid event ID format" });
   }
@@ -152,6 +127,7 @@ const updateAnEvent = async (req: Request, res: Response) => {
         data: {
           ...(name && { name }),
           ...(venue && { venue }),
+          ...(imageUrl && { imageUrl }),
           ...(date && { date: new Date(date) }),
           ...(totalSeats !== undefined && {
             totalSeats,

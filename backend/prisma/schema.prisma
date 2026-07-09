@@ -52,6 +52,7 @@ model Event {
   venue String
   date DateTime
   totalSeats Int
+  imageUrl String @default("") // I will just grab some image from google and store it here 
   createdAt DateTime @default(now())
   seats Seat[]
 }
