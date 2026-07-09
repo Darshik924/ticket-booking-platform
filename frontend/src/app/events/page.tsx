@@ -32,11 +32,12 @@ const Event = () => {
   }, [authLoading]);
 
   return (
-    <div className="min-h-screen bg-transparent">
+    <div className="min-h-screen bg-gray-800 ">
+
       <Navbar />
 
       <main className="mx-auto max-w-7xl px-4 py-10">
-        <div className="mb-10 rounded-[2rem] border border-border bg-card/70 p-8 shadow-sm shadow-zinc-900/5 backdrop-blur-sm">
+        <div className="mb-10 rounded-[2rem] border border-border bg-card/80 p-8 shadow-sm shadow-zinc-900/5 backdrop-blur-sm">
           <div className="max-w-3xl">
             <h1 className="text-3xl font-bold text-foreground sm:text-4xl">
               Upcoming Events

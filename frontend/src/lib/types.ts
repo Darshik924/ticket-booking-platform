@@ -3,6 +3,7 @@ interface eventType {
   name: string;
   venue: string;
   date: string;
+  imageUrl: string;
   totalSeats: number;
   availableSeats: number;
 }
@@ -38,13 +39,13 @@ interface bookingType {
   id: number;
   status: string;
   paymentStatus: string;
+  imageUrl: string;
   createdAt: string;
   seat: {
     seatNumber: string;
-     eventId: number;    // ✅ only eventId, no event object
-     event?: eventType; // Optional event object, can be undefined
+    eventId: number; // ✅ only eventId, no event object
+    event?: eventType; // Optional event object, can be undefined
   };
-  
 }
 
 export type { eventType, seatType, bookingType, userType, AuthContextType };
