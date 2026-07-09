@@ -19,7 +19,7 @@ const AdminEventForm = ({
   isSubmitting = false,
 }: AdminEventFormProps) => {
   const eventDate = useMemo(() => {
-    // useMemo() hook caches or memoizes the result of an expensive calculation re render 
+    // useMemo() hook caches or memoizes the result of an expensive calculation re render
     if (!event?.date) return "";
     return new Date(event.date).toISOString().slice(0, 16);
   }, [event?.date]);
@@ -80,6 +80,16 @@ const AdminEventForm = ({
           />
         </label>
       </div>
+
+      <label className="mt-2 space-y-2 text-sm text-gray-700">
+        <span>Image URL</span>
+        <input
+          value={event?.imageUrl || ""}
+          onChange={(e) => onChange("imageUrl", e.target.value)}
+          placeholder="Event Image Link"
+          className="w-full rounded-2xl border border-gray-300 bg-slate-50 px-4 py-3 text-sm focus:border-black focus:outline-none focus:ring-2 focus:ring-black/10"
+        />
+      </label>
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
         <button

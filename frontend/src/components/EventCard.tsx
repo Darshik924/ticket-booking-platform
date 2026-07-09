@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { eventType } from "@/lib/types";
+import { image } from "motion/react-client";
 
 const EventCard = ({ event }: { event: eventType }) => {
   const date = new Date(event.date);
-
+  const imageUrl = event.imageUrl;
   const soldOut = event.availableSeats === 0;
   const lowStock =
     event.availableSeats > 0 && event.availableSeats <= event.totalSeats * 0.1;
@@ -13,7 +14,9 @@ const EventCard = ({ event }: { event: eventType }) => {
       href={`/events/${event.id}`}
       className="block rounded-xl border border-border/60 bg-card p-6 shadow-sm transition-shadow hover:shadow-md"
     >
-      <div className="mb-4 flex items-start justify-between gap-4">
+      <div className="mb-4 flex flex-col items-start justify-between gap-4">
+        <img src={imageUrl} alt={`${event.name}`} />
+
         <h3 className="text-lg font-bold text-zinc-900">{event.name}</h3>
         {soldOut && (
           <span className="rounded-full bg-muted px-2 py-1 text-xs font-medium text-muted-foreground">

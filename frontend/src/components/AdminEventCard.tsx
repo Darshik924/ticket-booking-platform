@@ -1,6 +1,8 @@
 "use client";
 
 import { eventType } from "@/lib/types";
+import { image } from "motion/react-client";
+import { eventMcpToolUsage } from "next/dist/telemetry/events";
 
 interface AdminEventCardProps {
   event: eventType;
@@ -22,6 +24,8 @@ const AdminEventCard = ({
 
   return (
     <div className="rounded-3xl border border-border bg-card p-6 shadow-sm transition hover:shadow-md">
+      <img className="mb-2" src={event.imageUrl} alt={`${event.name}`} />
+
       <div className="flex items-start justify-between gap-4">
         <div>
           <h3 className="text-lg font-semibold text-foreground">
@@ -75,15 +79,16 @@ const AdminEventCard = ({
         <button
           type="button"
           onClick={() => onEdit(event)}
-          className="rounded-2xl border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition hover:bg-foreground hover:text-background"
+          className="rounded-2xl border border-border bg-background px-4 py-2 text-sm cursor-pointer font-medium text-foreground transition hover:bg-foreground hover:text-background"
         >
           Edit
         </button>
+        
         <button
           type="button"
           onClick={() => onDelete(event.id)}
           disabled={isDeleting}
-          className="rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-2 text-sm font-medium text-destructive transition hover:bg-destructive/20 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-2 text-sm font-medium text-destructive transition hover:bg-red-600 hover:text-white duration-300 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isDeleting ? "Deleting..." : "Delete"}
         </button>

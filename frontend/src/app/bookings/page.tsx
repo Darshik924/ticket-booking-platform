@@ -37,7 +37,7 @@ export default function MyBookingsPage() {
   return (
     <div className="bg-gray-200">
       <Navbar />
-      <main className="mx-auto max-w-3xl px-6 py-10">
+      <main className="mx-auto px-6 py-10">
         <h1 className="mb-2 text-3xl font-bold text-foreground">My Bookings</h1>
         <p className="mb-6 text-muted-foreground">
           All your ticket reservations
@@ -72,13 +72,19 @@ export default function MyBookingsPage() {
           </div>
         )}
 
-        <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-3 gap-4">
           {filtered.map((booking) => (
             <div
               key={booking.id}
               className="rounded-xl border border-border bg-card p-5 shadow-sm"
             >
-              <div className="mb-3 flex items-start justify-between">
+              <div className="mb-3 flex flex-col items-start justify-between">
+                <img
+                  src={booking.imageUrl}
+                  className="h-70 w-110 mb-2"
+                  alt={`${booking.id}`}
+                />
+
                 <div>
                   {/* 1. Event Name Header */}
                   <h2 className="mb-1 text-xl font-bold text-foreground">

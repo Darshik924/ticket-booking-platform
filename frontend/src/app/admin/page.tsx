@@ -110,6 +110,7 @@ const Admin = () => {
     setFormEvent({
       name: "",
       venue: "",
+      imageUrl: "",
       date: new Date().toISOString().slice(0, 16),
       totalSeats: 50,
       availableSeats: 50,
@@ -130,6 +131,7 @@ const Admin = () => {
       !formEvent.name ||
       !formEvent.venue ||
       !formEvent.date ||
+      !formEvent.imageUrl ||
       !formEvent.totalSeats
     ) {
       setFormError("Please fill out all event fields before saving.");
@@ -154,6 +156,7 @@ const Admin = () => {
     const payload = {
       name: String(formEvent.name),
       venue: String(formEvent.venue),
+      imageUrl: String(formEvent.imageUrl),
       date: new Date(String(formEvent.date)).toISOString(),
       totalSeats: Number(formEvent.totalSeats),
     };
