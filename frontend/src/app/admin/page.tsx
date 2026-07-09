@@ -188,7 +188,7 @@ const Admin = () => {
 
   return (
     <AdminProtect>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-gray-200">
         <Nav />
         <main className="mx-auto max-w-7xl px-6 py-10">
           <div className="mb-10 rounded-4xl border border-border bg-card p-8 shadow-sm">
@@ -210,7 +210,7 @@ const Admin = () => {
                 type="button"
                 onClick={handleCreate}
                 disabled={actionLoading}
-                className="inline-flex items-center justify-center rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center cursor-pointer justify-center rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 + New event
               </button>

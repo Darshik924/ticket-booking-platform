@@ -35,7 +35,7 @@ export default function MyBookingsPage() {
     filter === "all" ? bookings : bookings.filter((b) => b.status === filter);
 
   return (
-    <div>
+    <div className="bg-gray-200">
       <Navbar />
       <main className="mx-auto max-w-3xl px-6 py-10">
         <h1 className="mb-2 text-3xl font-bold text-foreground">My Bookings</h1>
@@ -155,7 +155,7 @@ export default function MyBookingsPage() {
                 <button
                   onClick={() => handleCancel(booking.id)}
                   disabled={booking.status === "CANCELLED"}
-                  className="rounded-lg border border-destructive/20 px-4 py-2 text-sm text-destructive transition hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="rounded-lg cursor-pointer border border-destructive/20 px-4 py-2 text-sm text-destructive transition hover:bg-red-500 hover:text-white duration-500 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   Cancel Booking
                 </button>
