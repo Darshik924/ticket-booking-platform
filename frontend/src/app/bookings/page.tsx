@@ -45,7 +45,7 @@ export default function MyBookingsPage() {
             <h1 className="text-3xl font-bold text-foreground sm:text-4xl">
               My Bookings
             </h1>
-            <p className="mt-3 text-base text-muted-foreground sm:text-lg">
+            <p className="mt-3 text-base text-shadow-black sm:text-lg">
               All your ticket reservations
             </p>
           </div>
@@ -58,7 +58,7 @@ export default function MyBookingsPage() {
                 className={`rounded-full border px-4 py-1.5 text-sm transition ${
                   filter === f
                     ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border text-muted-foreground hover:border-primary/40"
+                    : "border-border text-shadow-black hover:border-primary/40"
                 }`}
               >
                 {f === "all" ? "All" : f.charAt(0) + f.slice(1).toLowerCase()}

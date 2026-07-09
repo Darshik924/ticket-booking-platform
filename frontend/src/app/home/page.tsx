@@ -141,7 +141,6 @@ const Home = () => {
                               </div>
                             </div>
 
-                            {/* Status Badge */}
                             <div className="absolute top-6 right-6">
                               {soldOut ? (
                                 <span className="rounded-full bg-red-500/90 px-4 py-2 text-sm font-semibold text-white">
