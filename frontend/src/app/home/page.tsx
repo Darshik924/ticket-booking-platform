@@ -3,10 +3,11 @@ import React from "react";
 
 const Home = () => {
   return (
-    <div>
+    <div className="bg-gray-200 min-h-screen">
       <Nav />
-
-      <h1>Home</h1>
+      <main className="">
+        <h1>Home</h1>
+      </main>
     </div>
   );
 };

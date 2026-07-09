@@ -345,7 +345,7 @@ const EventDetails = ({ params }: PageProps) => {
   };
 
   return (
-    <div className="bg-gray-200">
+    <div className="bg-gray-200 min-h-screen">
       <Navbar />
       <main className="max-w-3xl mx-auto px-6 py-10">
         {loading && <p className="text-muted-foreground">Loading details...</p>}
