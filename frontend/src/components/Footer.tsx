@@ -13,7 +13,7 @@ const footerMem = {
 const Footer = () => {
   return (
     <footer className="bg-black text-white">
-      <div className="mx-auto max-w-7xl px-6 py-16">
+      <div className="mx-auto max-w-7xl px-6 py-4">
         <div className="flex flex-col gap-12 md:flex-row md:items-start md:justify-between">
           {/* Brand */}
           <div className="max-w-md">
@@ -57,7 +57,7 @@ const Footer = () => {
         </div>
 
         {/* Bottom divider + copyright */}
-        <div className="mt-14 border-t border-white/10 pt-6">
+        <div className="mt-4 border-t border-white/10 pt-2">
           <p className="text-sm text-white/40">
             © {new Date().getFullYear()} TicketBook. All rights reserved.
           </p>

@@ -10,6 +10,7 @@ import PaymentQueuePanel from "@/components/queue/PaymentQueuePanel";
 import MapQueuePanel from "@/components/queue/MapQueuePanel";
 import { socket } from "@/lib/socket"; //our socket manager
 import { redirect, useRouter } from "next/navigation";
+import Footer from "@/components/Footer";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -368,15 +369,12 @@ const EventDetails = ({ params }: PageProps) => {
 
         {event && (
           <div>
-            {/* HERO IMAGE SECTION */}
             <div
               className="relative h-96 w-full bg-cover bg-center rounded-2xl overflow-hidden border border-border shadow-lg mb-10"
               style={{ backgroundImage: `url(${event.imageUrl})` }}
             >
-              {/* Dark Gradient Overlay */}
               <div className="absolute inset-0 bg-linear-to-b from-black/30 via-black/40 to-black/70"></div>
 
-              {/* Content Overlay */}
               <div className="relative h-full flex flex-col justify-between p-8">
                 <div>
                   <p className="text-white/80 text-sm font-medium mb-2">
