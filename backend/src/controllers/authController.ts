@@ -1,8 +1,8 @@
 // changes User model
 // This file contains the authentication controller functions for handling user registration, login, and profile retrieval. It uses the authService functions to perform the necessary operations and sends appropriate HTTP responses based on the outcomes.
 import { Request, RequestHandler, Response } from "express";
-import { registerUser } from "../services/authService";
-import { loginUser } from "../services/authService";
+import { registerUser } from "../services/auth.service";
+import { loginUser } from "../services/auth.service";
 import { AuthRequest } from "../middlewares/authMiddleware";
 import { generateToken } from "../utils/jwtToken";
 import { prisma } from "../lib/prisma";

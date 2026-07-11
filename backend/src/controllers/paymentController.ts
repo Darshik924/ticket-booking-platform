@@ -3,6 +3,7 @@ import { prisma } from "../lib/prisma";
 import { redisClient } from "../lib/redis";
 import { REDIS_KEYS } from "../lib/constants";
 import { paymentQueue } from "../lib/bullmq";
+import { getIO } from "../lib/socket";
 import { AuthRequest } from "../middlewares/authMiddleware";
 import { getIntegerId } from "../utils/getIntegerIds";
 
@@ -13,6 +14,7 @@ import { getIntegerId } from "../utils/getIntegerIds";
 export const processPaymentHandler: RequestHandler = async (req, res) => {
   const authReq = req as AuthRequest;
   const userId = authReq.user?.userId;
+  const io = getIO();
 
   if (!userId) {
     return res.status(401).json({ success: false, message: "Unauthorized" });

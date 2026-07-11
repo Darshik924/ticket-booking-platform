@@ -24,38 +24,6 @@ export const registerUser = async (
   });
 };
 
-// Function to authenticate a user and generate a JWT token
-// export const loginUser = async (email: string, password: string) => {
-//   const user = await prisma.user.findUnique({
-//     where: { email },
-//   });
-
-//   if (!user) {
-//     throw new Error("Invalid email or password");
-//   }
-
-//   if (!user.passwordHash) {
-//     throw new Error("This account uses Google Sign-In");
-//   }
-
-//   const isValidPassword = await bcrypt.compare(password, user.passwordHash);
-
-//   if (!isValidPassword) {
-//     throw new Error("Invalid email or password");
-//   }
-
-//   const token = generateToken(user.id, user.email);
-
-//   return {
-//     token,
-//     user: {
-//       id: user.id,
-//       name: user.name,
-//       email: user.email,
-//       role: user.role,
-//     },
-//   };
-// };
 export const loginUser = async (email: string, password: string) => {
   const totalStart = Date.now();
 

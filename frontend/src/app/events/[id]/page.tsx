@@ -1,6 +1,7 @@
 "use client"; // Runs in browser (needed for hooks like useEffect/useState)
 
 import { useEffect, useState, use, useCallback } from "react";
+import { motion } from "motion/react";
 import { api } from "@/lib/api";
 import { eventType, seatType } from "@/lib/types";
 import Navbar from "@/components/Nav";
@@ -8,26 +9,21 @@ import SeatLockInfo from "@/components/queue/SeatLockInfo";
 import PaymentQueuePanel from "@/components/queue/PaymentQueuePanel";
 import MapQueuePanel from "@/components/queue/MapQueuePanel";
 import { socket } from "@/lib/socket"; //our socket manager
+import { redirect, useRouter } from "next/navigation";
+import Footer from "@/components/Footer";
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-// Make a separate TTL view section, On clicking reserve seat this user only sees the TTL view section and there he sees his TTL and he should see Pay Now option.
-// After clicking Pay Now he now sees payment queue component and there he gets feedback on his queue and booking processed or not
-
-/* CHANGES */
-// SeatLockInfo.tsx shows TTL countdown and shows Pay Now and Cancel Reservation
-// PaymentQueuePanel.tsx - a skeleton queue panel and status, queue postion, and message area
-// In page.tsx - added reserveSeat, lockExpiresIn, showQueue and queueState
-
-// Reserve Seat Now transitions into TTL view
-// Pay Now opens the payment queue panel
-// Cancel returns to seat selection
-
 const EventDetails = ({ params }: PageProps) => {
   const { id } = use(params); // Grabs the event ID from the URL path (e.g., /events/2)
 
+  const handleTimeOut = () => {
+    redirect(`/events`);
+  };
+
+  const router = useRouter();
   // --- APP STATES ---
   const [event, setEvent] = useState<eventType | null>(null);
   const [seats, setSeats] = useState<seatType[]>([]);
@@ -40,7 +36,6 @@ const EventDetails = ({ params }: PageProps) => {
   const [queueState, setQueueState] = useState({
     status: "idle" as "idle" | "waiting" | "processing" | "success" | "failed",
     message: "",
-    position: null as number | null,
   });
   const [isLocking, setIsLocking] = useState(false); // Prevents spamming button clicks
 
@@ -99,7 +94,6 @@ const EventDetails = ({ params }: PageProps) => {
 
     fetchPageData();
 
-    // turn on walkie-talkie connection
     const token = localStorage.getItem("token");
     if (token) {
       socket.auth = { token };
@@ -114,11 +108,25 @@ const EventDetails = ({ params }: PageProps) => {
     socket.on("connect", () => {
       console.log("Socket connected", socket.id);
       socket.emit("join_event_queue", id);
+      socket.emit("join_seat_map", id);
       setMapQueueState((prev) => ({
         ...prev,
         connectionType: "websocket",
       }));
     });
+
+    socket.on(
+      "seat_status_changed",
+      (payload: { seatId: number; status: string }) => {
+        setSeats((prevSeats) =>
+          prevSeats.map((s) =>
+            s.id === payload.seatId
+              ? { ...s, status: payload.status as seatType["status"] }
+              : s,
+          ),
+        );
+      },
+    );
 
     socket.on("connect_error", (error: any) => {
       console.error("Socket connect error:", error);
@@ -127,7 +135,6 @@ const EventDetails = ({ params }: PageProps) => {
         status: "failed",
         message:
           "Socket connection failed. Real-time queue updates may not be available.",
-        position: current.position,
       }));
       setMapQueueState((prev) => ({
         ...prev,
@@ -141,14 +148,20 @@ const EventDetails = ({ params }: PageProps) => {
 
     // Listen for the success shout from paymentWorker.TS
     socket.on("booking_confirmed", (payload: any) => {
-      console.log("WebSocket Confirmed Receive:", payload);
       setQueueState((current) => ({
         ...current,
         status: "success",
         message: payload.message || "Booking confirmed.",
-        position: null,
       }));
-      alert(`🎉 Success! ${payload.message}`);
+    });
+
+    // Listen for the event when our worker is processing it at that time
+    socket.on("payment_processing", (payload: any) => {
+      setQueueState((current) => ({
+        ...current,
+        status: "processing",
+        message: payload.message || "Your payment is being processed...",
+      }));
     });
 
     //listen for the FAILURE SHOUT
@@ -160,14 +173,11 @@ const EventDetails = ({ params }: PageProps) => {
         message:
           payload.message ||
           "Booking failed. Your seat lock may have been released.",
-        position: null,
       }));
-      alert(`❌ Oh no! ${payload.message}`);
     });
 
-    // Listen for the real time queue updates from queueService.ts and update our mapQueueState
+    // Listen for the real time queue updates from queue.service.ts and update our mapQueueState
     socket.on("queue_update", (payload: any) => {
-      console.log("Queue update received for map queue:", payload);
       setMapQueueState((prev) => ({
         ...prev,
         position: payload.queuePosition ?? prev.position,
@@ -176,7 +186,6 @@ const EventDetails = ({ params }: PageProps) => {
     });
 
     socket.on("queue_promoted", (payload: any) => {
-      console.log("Queue promoted received for map queue:", payload);
       setMapQueueState((prev) => ({
         ...prev,
         isWaiting: false,
@@ -200,6 +209,8 @@ const EventDetails = ({ params }: PageProps) => {
       socket.off("queue_update");
       socket.off("queue_promoted");
       socket.off("queue_moved");
+      socket.off("payment_processing");
+      socket.off("seat_status_changed");
       socket.disconnect();
     };
   }, [id, fetchSeats]);
@@ -275,7 +286,6 @@ const EventDetails = ({ params }: PageProps) => {
       setQueueState({
         status: "idle",
         message: "Reserve your seat and then click Pay Now.",
-        position: null,
       });
     } catch (err: any) {
       console.error(err);
@@ -296,7 +306,6 @@ const EventDetails = ({ params }: PageProps) => {
       setQueueState({
         status: "waiting",
         message: "You are in the payment queue. Waiting for updates...",
-        position: -1,
       });
 
       // Dummy values for our Queue IDK what to put here doesnt update...
@@ -313,7 +322,6 @@ const EventDetails = ({ params }: PageProps) => {
         status: "waiting",
         message:
           "Your payment request is accepted. Waiting for queue updates...",
-        position: response.data.queuePosition ?? current.position,
       }));
 
       // Keep the UI waiting while the backend sends queue updates.
@@ -325,24 +333,31 @@ const EventDetails = ({ params }: PageProps) => {
         message:
           err.response?.data?.message ||
           "Payment request failed. Please try again.",
-        position: null,
       });
     }
   };
 
-  const handleCancelReservation = () => {
-    if (reservedSeat) {
-      setSeats((previousSeats) =>
-        previousSeats.map((s) =>
-          s.id === reservedSeat.id ? { ...s, status: "AVAILABLE" } : s,
-        ),
+  const handleCancelReservation = async () => {
+    try {
+      const response = await api.delete(
+        `/api/seats/${id}/${reservedSeat?.id}/lock`,
+      );
+      console.log(response);
+    } catch (err: any) {
+      console.error(err);
+      alert(
+        err.response?.data?.message ||
+          "Something Went Wrong, return to Home page.",
       );
     }
+
     setSelectedSeat(null);
     setReservedSeat(null);
     setLockExpiresIn(null);
     setShowQueue(false);
-    setQueueState({ status: "idle", message: "", position: null });
+    setQueueState({ status: "idle", message: "" });
+
+    router.push("/events");
   };
 
   return (
@@ -354,15 +369,12 @@ const EventDetails = ({ params }: PageProps) => {
 
         {event && (
           <div>
-            {/* HERO IMAGE SECTION */}
             <div
               className="relative h-96 w-full bg-cover bg-center rounded-2xl overflow-hidden border border-border shadow-lg mb-10"
               style={{ backgroundImage: `url(${event.imageUrl})` }}
             >
-              {/* Dark Gradient Overlay */}
               <div className="absolute inset-0 bg-linear-to-b from-black/30 via-black/40 to-black/70"></div>
 
-              {/* Content Overlay */}
               <div className="relative h-full flex flex-col justify-between p-8">
                 <div>
                   <p className="text-white/80 text-sm font-medium mb-2">
@@ -477,13 +489,21 @@ const EventDetails = ({ params }: PageProps) => {
                           {selectedSeat.seatNumber}
                         </h4>
                       </div>
-                      <button
+                      <motion.button
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 260,
+                          damping: 20,
+                        }}
+                        whileTap={{ scale: 0.9 }}
                         onClick={handleReserveSeat}
                         disabled={isLocking}
-                        className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:bg-primary/60"
+                        className="rounded-lg bg-primary px-5 py-2.5 text-sm cursor-pointer hover:bg-black duration-300 font-semibold text-primary-foreground shadow-sm transition disabled:bg-primary/60"
                       >
                         {isLocking ? "Reserving..." : "Reserve Seat"}
-                      </button>
+                      </motion.button>
                     </div>
                   )}
                 </>
@@ -493,12 +513,12 @@ const EventDetails = ({ params }: PageProps) => {
                   lockExpiresIn={lockExpiresIn}
                   onPayNow={handlePayNow}
                   onCancel={handleCancelReservation}
+                  onTimeOut={handleTimeOut}
                 />
               ) : reservedSeat && showQueue ? (
                 <PaymentQueuePanel
                   seat={reservedSeat}
                   queueState={queueState}
-                  onCancel={handleCancelReservation}
                 />
               ) : null}
             </div>

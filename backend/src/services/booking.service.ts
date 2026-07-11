@@ -2,11 +2,11 @@ import { BookingStatus, PrismaClient } from "../generated/prisma";
 import { prisma } from "../lib/prisma";
 import { redisClient } from "../lib/redis";
 import { REDIS_KEYS } from "../lib/constants";
-import { promoteQueueAndNotify } from "./queueService";
+import { promoteQueueAndNotify } from "./queue.service";
 import {
   getLockHolder,
   releaseYourSeatLock,
-} from "../services/seatLock.service";
+} from "./seatLock.service";
 
 export const createBooking = async (userId: number, seatId: number) => {
   const seat = await prisma.seat.findUnique({

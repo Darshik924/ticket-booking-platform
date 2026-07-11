@@ -6,6 +6,7 @@ import { eventType } from "@/lib/types";
 import { useAuth } from "@/context/AuthContext";
 import Navbar from "@/components/Nav";
 import EventCard from "@/components/EventCard";
+import Footer from "@/components/Footer";
 
 const Event = () => {
   const { loading: authLoading } = useAuth();
@@ -33,7 +34,6 @@ const Event = () => {
 
   return (
     <div className="min-h-screen bg-gray-800 ">
-
       <Navbar />
 
       <main className="mx-auto max-w-7xl px-4 py-10">
@@ -63,6 +63,8 @@ const Event = () => {
           ))}
         </div>
       </main>
+
+      <Footer />
     </div>
   );
 };

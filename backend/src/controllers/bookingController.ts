@@ -1,12 +1,12 @@
 //talks to server
 
 import { RequestHandler, Response } from "express";
-import { createBooking } from "../services/bookingService";
+import { createBooking } from "../services/booking.service";
 import { AuthRequest } from "../middlewares/authMiddleware";
-import { getMyBookings } from "../services/bookingService";
+import { getMyBookings } from "../services/booking.service";
 import { success } from "zod";
-import { getBookingById } from "../services/bookingService";
-import { cancelBooking } from "../services/bookingService";
+import { getBookingById } from "../services/booking.service";
+import { cancelBooking } from "../services/booking.service";
 
 export const createBookingHandler: RequestHandler = async (req, res) => {
   const authReq = req as AuthRequest;
