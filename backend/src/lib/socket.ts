@@ -11,10 +11,10 @@ export const initSocket = (server: HttpServer) => {
     cors: {
       // 1. Swap the "*" wildcard out for your exact frontend URL
       origin: process.env.FRONTEND_URL || "http://localhost:3000",
-      
+
       // 2. Explicitly allow credentials/cookies to pass through
       credentials: true,
-      
+
       methods: ["GET", "POST"],
     },
   });
@@ -54,6 +54,10 @@ export const initSocket = (server: HttpServer) => {
       console.log(`User ${userId} joined event queue room: ${eventId}`);
     });
 
+    socket.on("join_seat_map", (eventId: string) => {
+      socket.join(`seat_map:${eventId}`);
+    });
+
     socket.on("leave_event_queue", async (eventId: number | string) => {
       const eId = Number(eventId);
       const queueKey = REDIS_KEYS.waitingQueue(eId);
@@ -63,10 +67,13 @@ export const initSocket = (server: HttpServer) => {
       await redisClient.srem(activeKey, String(userId));
 
       socket.leave(`event_queue:${eventId}`);
-      console.log(`User ${userId} explicitly left event queue room: ${eventId}`);
+      console.log(
+        `User ${userId} explicitly left event queue room: ${eventId}`,
+      );
 
       // Promote next user in line
-      const { promoteQueueAndNotify } = await import("../services/queue.service");
+      const { promoteQueueAndNotify } =
+        await import("../services/queue.service");
       await promoteQueueAndNotify(eId);
     });
 
@@ -82,7 +89,8 @@ export const initSocket = (server: HttpServer) => {
         await redisClient.srem(activeKey, String(userId));
 
         // Promote next user in line
-        const { promoteQueueAndNotify } = await import("../services/queue.service");
+        const { promoteQueueAndNotify } =
+          await import("../services/queue.service");
         await promoteQueueAndNotify(eId);
       }
     });

@@ -37,7 +37,7 @@ const MapQueuePanel = ({
   const status = getStatusTextAndColor();
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-border bg-linear-to-b from-background to-card p-8 shadow-md">
+    <div className="relative overflow-hidden rounded-2xl border border-border bg-linear-to-b from-background to-gray-100 p-8 shadow-md">
       {/* Background Decorative Gradient Radial */}
       <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-primary/10 blur-3xl"></div>
       <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-accent/10 blur-3xl"></div>

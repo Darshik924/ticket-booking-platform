@@ -92,7 +92,6 @@ const EventDetails = ({ params }: PageProps) => {
 
     fetchPageData();
 
-    // turn on walkie-talkie connection
     const token = localStorage.getItem("token");
     if (token) {
       socket.auth = { token };
@@ -107,11 +106,25 @@ const EventDetails = ({ params }: PageProps) => {
     socket.on("connect", () => {
       console.log("Socket connected", socket.id);
       socket.emit("join_event_queue", id);
+      socket.emit("join_seat_map", id);
       setMapQueueState((prev) => ({
         ...prev,
         connectionType: "websocket",
       }));
     });
+
+    socket.on(
+      "seat_status_changed",
+      (payload: { seatId: number; status: string }) => {
+        setSeats((prevSeats) =>
+          prevSeats.map((s) =>
+            s.id === payload.seatId
+              ? { ...s, status: payload.status as seatType["status"] }
+              : s,
+          ),
+        );
+      },
+    );
 
     socket.on("connect_error", (error: any) => {
       console.error("Socket connect error:", error);
@@ -195,6 +208,7 @@ const EventDetails = ({ params }: PageProps) => {
       socket.off("queue_promoted");
       socket.off("queue_moved");
       socket.off("payment_processing");
+      socket.off("seat_status_changed");
       socket.disconnect();
     };
   }, [id, fetchSeats]);
@@ -321,19 +335,27 @@ const EventDetails = ({ params }: PageProps) => {
     }
   };
 
-  const handleCancelReservation = () => {
-    if (reservedSeat) {
-      setSeats((previousSeats) =>
-        previousSeats.map((s) =>
-          s.id === reservedSeat.id ? { ...s, status: "AVAILABLE" } : s,
-        ),
+  const handleCancelReservation = async () => {
+    try {
+      const response = await api.delete(
+        `/api/seats/${id}/${reservedSeat?.id}/lock`,
+      );
+      console.log(response);
+    } catch (err: any) {
+      console.error(err);
+      alert(
+        err.response?.data?.message ||
+          "Something Went Wrong, return to Home page.",
       );
     }
+
     setSelectedSeat(null);
     setReservedSeat(null);
     setLockExpiresIn(null);
     setShowQueue(false);
     setQueueState({ status: "idle", message: "" });
+
+    redirect("/events");
   };
 
   return (
@@ -498,7 +520,6 @@ const EventDetails = ({ params }: PageProps) => {
                 <PaymentQueuePanel
                   seat={reservedSeat}
                   queueState={queueState}
-                  onCancel={handleCancelReservation}
                 />
               ) : null}
             </div>

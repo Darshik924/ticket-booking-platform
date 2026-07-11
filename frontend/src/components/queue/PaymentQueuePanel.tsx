@@ -11,12 +11,10 @@ interface QueueState {
 interface Props {
   seat: seatType | null;
   queueState: QueueState;
-  onCancel: () => void;
 }
 
 const STEPS = ["waiting", "processing", "success"] as const;
 
-// Animated Check Icon for the Success state
 const AnimatedCheck = () => (
   <motion.svg
     xmlns="http://www.w3.org/2000/svg"
@@ -45,7 +43,7 @@ const AnimatedCheck = () => (
   </motion.svg>
 );
 
-const PaymentQueuePanel = ({ seat, queueState, onCancel }: Props) => {
+const PaymentQueuePanel = ({ seat, queueState }: Props) => {
   if (!seat) return null;
 
   const statusClasses = {
@@ -173,15 +171,6 @@ const PaymentQueuePanel = ({ seat, queueState, onCancel }: Props) => {
           {queueState.message || statusDescriptions[queueState.status]}
         </p>
       </div>
-
-      {(queueState.status === "idle" || queueState.status === "waiting") && (
-        <button
-          onClick={onCancel}
-          className="mt-6 w-full rounded-lg border border-border px-5 py-2.5 text-sm font-semibold text-foreground transition hover:bg-muted"
-        >
-          Cancel
-        </button>
-      )}
     </div>
   );
 };

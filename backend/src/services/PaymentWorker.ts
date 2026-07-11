@@ -57,7 +57,7 @@ const worker = new Worker(
       // 5. Trigger waiting room queue promotion to let the next queued user in
       await promoteQueueAndNotify(eventId);
 
-      // 6. Notify the user via WebSockets that their booking is fully confirmed
+      // 6. Notify the user and the seat map UI room via WebSockets that their booking is fully confirmed
       const io = getIO();
       io.to(`user:${userId}`).emit("booking_confirmed", {
         success: true,
@@ -65,6 +65,11 @@ const worker = new Worker(
         seatId,
         message:
           "Your payment was processed successfully! Your ticket is confirmed.",
+      });
+
+      io.to(`seat_map:${eventId}`).emit("seat_status_changed", {
+        seatId,
+        status: "BOOKED",
       });
 
       console.log(
@@ -122,6 +127,11 @@ const worker = new Worker(
           bookingId,
           seatId,
           message: "Payment failed. Your seat lock has been released.",
+        });
+
+        io.to(`seat_map:${eventId}`).emit("seat_status_changed", {
+          seatId,
+          status: "AVAILABLE",
         });
       } catch (cleanupErr) {
         console.error(
