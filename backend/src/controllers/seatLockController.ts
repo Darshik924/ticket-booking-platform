@@ -2,7 +2,7 @@ import { Request, RequestHandler, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { redisClient } from "../lib/redis";
 import { REDIS_KEYS } from "../lib/constants";
-import { promoteQueueAndNotify } from "../services/queueService";
+import { promoteQueueAndNotify } from "../services/queue.service";
 
 import {
   acquireSeatAndLock,

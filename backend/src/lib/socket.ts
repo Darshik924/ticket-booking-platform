@@ -66,7 +66,7 @@ export const initSocket = (server: HttpServer) => {
       console.log(`User ${userId} explicitly left event queue room: ${eventId}`);
 
       // Promote next user in line
-      const { promoteQueueAndNotify } = await import("../services/queueService");
+      const { promoteQueueAndNotify } = await import("../services/queue.service");
       await promoteQueueAndNotify(eId);
     });
 
@@ -82,7 +82,7 @@ export const initSocket = (server: HttpServer) => {
         await redisClient.srem(activeKey, String(userId));
 
         // Promote next user in line
-        const { promoteQueueAndNotify } = await import("../services/queueService");
+        const { promoteQueueAndNotify } = await import("../services/queue.service");
         await promoteQueueAndNotify(eId);
       }
     });
