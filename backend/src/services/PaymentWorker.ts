@@ -4,6 +4,7 @@ import { redisClient } from "../lib/redis";
 import { REDIS_KEYS } from "../lib/constants";
 import { promoteQueueAndNotify } from "./queue.service";
 import { getIO } from "../lib/socket";
+import { getIntegerId } from "../utils/getIntegerIds";
 
 // Create a background worker to process payment jobs from the "paymentQueue"
 const worker = new Worker(
@@ -67,8 +68,9 @@ const worker = new Worker(
           "Your payment was processed successfully! Your ticket is confirmed.",
       });
 
+      const newSeatId = getIntegerId(seatId);
       io.to(`seat_map:${eventId}`).emit("seat_status_changed", {
-        seatId,
+        seatId: newSeatId,
         status: "BOOKED",
       });
 
@@ -129,8 +131,9 @@ const worker = new Worker(
           message: "Payment failed. Your seat lock has been released.",
         });
 
+        const newSeatid = getIntegerId(seatId);
         io.to(`seat_map:${eventId}`).emit("seat_status_changed", {
-          seatId,
+          seatId: newSeatid,
           status: "AVAILABLE",
         });
       } catch (cleanupErr) {

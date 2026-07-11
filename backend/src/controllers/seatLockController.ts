@@ -53,8 +53,9 @@ const lockSeat: RequestHandler = async (req, res) => {
   // Alright our client now passed Both our tests (DATABASE and redis DB or server)
   // We now start his TTL for a payment window
 
-  getIO().to(`seat_map:${eventId}`).emit("seat_status_changed", {
-    seatId,
+  const io = getIO();
+  io.to(`seat_map:${eventId}`).emit("seat_status_changed", {
+    seatId: seat.id,
     status: "LOCKED",
   });
 
@@ -96,6 +97,12 @@ const unLockSeat: RequestHandler = async (req, res) => {
   promoteQueueAndNotify(seat.eventId).catch((err) =>
     console.error("Queue promotion failed:", err),
   );
+
+  const io = getIO();
+  io.to(`seat_map:${eventId}`).emit("seat_status_changed", {
+    seatId: seat.id,
+    status: "AVAILABLE",
+  });
 
   res.json({ message: "Seat Lock Released", seatId: seat.id });
 };

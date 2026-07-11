@@ -56,6 +56,7 @@ export const initSocket = (server: HttpServer) => {
 
     socket.on("join_seat_map", (eventId: string) => {
       socket.join(`seat_map:${eventId}`);
+      console.log(`User ${userId} joined seat map room: ${eventId}`);
     });
 
     socket.on("leave_event_queue", async (eventId: number | string) => {

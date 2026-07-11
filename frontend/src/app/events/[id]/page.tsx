@@ -9,7 +9,7 @@ import SeatLockInfo from "@/components/queue/SeatLockInfo";
 import PaymentQueuePanel from "@/components/queue/PaymentQueuePanel";
 import MapQueuePanel from "@/components/queue/MapQueuePanel";
 import { socket } from "@/lib/socket"; //our socket manager
-import { redirect } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -22,6 +22,7 @@ const EventDetails = ({ params }: PageProps) => {
     redirect(`/events`);
   };
 
+  const router = useRouter();
   // --- APP STATES ---
   const [event, setEvent] = useState<eventType | null>(null);
   const [seats, setSeats] = useState<seatType[]>([]);
@@ -355,7 +356,7 @@ const EventDetails = ({ params }: PageProps) => {
     setShowQueue(false);
     setQueueState({ status: "idle", message: "" });
 
-    redirect("/events");
+    router.push("/events");
   };
 
   return (
