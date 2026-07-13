@@ -1,7 +1,11 @@
 import { Request, Response } from "express";
 import { redisClient } from "../lib/redis";
 import { prisma } from "../lib/prisma";
-import { REDIS_KEYS, MAX_ACTIVE_USERS, QUEUE_TTL_SECONDS } from "../lib/constants";
+import {
+  REDIS_KEYS,
+  MAX_ACTIVE_USERS,
+  QUEUE_TTL_SECONDS,
+} from "../lib/constants";
 import { getIntegerId } from "../utils/getIntegerIds";
 import { AuthRequest } from "../middlewares/authMiddleware";
 import jwt from "jsonwebtoken";
@@ -129,8 +133,9 @@ const getSeatMap = async (req: Request, res: Response) => {
   const hashKey = REDIS_KEYS.eventSeats(newId);
   let seatsData = await redisClient.hgetall(hashKey);
 
-  // Fallback/Lazy-load: if Redis Hash is empty, fetch from database and populate cache
-  if (Object.keys(seatsData).length === 0) {
+  // Fallback/Lazy-load: if Redis Hash is missing or incomplete, fetch from database and populate cache
+  const cacheSize = Object.keys(seatsData).length;
+  if (cacheSize === 0 || cacheSize !== event.totalSeats) {
     const seatsFromDb = await prisma.seat.findMany({
       where: { eventId: newId },
       orderBy: { seatNumber: "asc" },
@@ -160,23 +165,28 @@ const getSeatMap = async (req: Request, res: Response) => {
   }
 
   // Parse seats from the hgetall result (lightweight format: seatNumber:status)
-  const seats = Object.entries(seatsData).map(([seatId, value]: [string, any]) => {
-    const colonIdx = value.indexOf(":");
-    const seatNumber = value.substring(0, colonIdx);
-    const status = value.substring(colonIdx + 1);
-    return {
-      id: Number(seatId),
-      seatNumber,
-      status: status as any,
-    };
-  });
+  const seats = Object.entries(seatsData).map(
+    ([seatId, value]: [string, any]) => {
+      const colonIdx = value.indexOf(":");
+      const seatNumber = value.substring(0, colonIdx);
+      const status = value.substring(colonIdx + 1);
+      return {
+        id: Number(seatId),
+        seatNumber,
+        status: status as any,
+      };
+    },
+  );
 
   // Natural sort by seatNumber (e.g. A1, A2, A10)
-  seats.sort((a: any, b: any) => a.seatNumber.localeCompare(b.seatNumber, undefined, { numeric: true }));
+  seats.sort((a: any, b: any) =>
+    a.seatNumber.localeCompare(b.seatNumber, undefined, { numeric: true }),
+  );
 
   // Retrieve lock status for all seats in a single MGET call to avoid N round-trips
   const lockKeys = seats.map((seat) => REDIS_KEYS.seatLock(newId, seat.id));
-  const lockHolders = lockKeys.length > 0 ? await redisClient.mget(...lockKeys) : [];
+  const lockHolders =
+    lockKeys.length > 0 ? await redisClient.mget(...lockKeys) : [];
 
   // Reconcile and perform self-healing cache updates using a pipeline in the background
   const healingPipeline = redisClient.pipeline();
@@ -189,7 +199,11 @@ const getSeatMap = async (req: Request, res: Response) => {
       if (!lockedBy) {
         // Lock has expired! Update status back to AVAILABLE in background
         const updatedSeat = { ...seat, status: "AVAILABLE" as const };
-        healingPipeline.hset(hashKey, String(seat.id), `${seat.seatNumber}:AVAILABLE`);
+        healingPipeline.hset(
+          hashKey,
+          String(seat.id),
+          `${seat.seatNumber}:AVAILABLE`,
+        );
         needsHealing = true;
         return updatedSeat;
       }
@@ -200,7 +214,11 @@ const getSeatMap = async (req: Request, res: Response) => {
       if (lockedBy) {
         // Lock exists but Hash wasn't updated. Return LOCKED and update Hash
         const updatedSeat = { ...seat, status: "LOCKED" as const };
-        healingPipeline.hset(hashKey, String(seat.id), `${seat.seatNumber}:LOCKED`);
+        healingPipeline.hset(
+          hashKey,
+          String(seat.id),
+          `${seat.seatNumber}:LOCKED`,
+        );
         needsHealing = true;
         return updatedSeat;
       }
@@ -211,7 +229,9 @@ const getSeatMap = async (req: Request, res: Response) => {
   });
 
   if (needsHealing) {
-    healingPipeline.exec().catch((err) => console.error("Self-healing cache sync failed:", err));
+    healingPipeline
+      .exec()
+      .catch((err) => console.error("Self-healing cache sync failed:", err));
   }
 
   res.status(200).json({

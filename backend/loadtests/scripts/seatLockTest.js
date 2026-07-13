@@ -1,47 +1,99 @@
 import http from "k6/http";
 import { check } from "k6";
+import { Counter } from "k6/metrics";
+
+/* This is the main Load test for our app that tests and proofs the ZERO overselling of tickets */
+
+// This is experimental data, you will have to change these for a accurate test
+const BASE_URL = "http://localhost:5000/api";
+const SEAT_ID = 147;
+const EVENT_ID = 5;
+const USER_COUNT = 500;
+const PASSWORD = "12345";
+
+// We will use Custom counters so we can see the EXACT outcome breakdown in the summary,
+// Not a pass/fail rate.
+const lockSuccess = new Counter("seat_lock_success");
+const lockConflict = new Counter("seat_lock_conflict");
+const lockUnexpected = new Counter("seat_lock_unexpected");
 
 export const options = {
-  vus: 10,//virtual users
-  iterations: 10,//total iterations for the test
+  scenarios: {
+    seat_lock_race: {
+      executor: "per-vu-iterations",
+      vus: USER_COUNT,
+      iterations: 1,
+      maxDuration: "30s",
+    },
+  },
+  thresholds: {
+    // If Redis locking is atomic, exactly one request should ever succeed.
+    // We should have all of these thresholds as a success
+    seat_lock_success: ["count==1"],
+    // Only one should have a seat Locked
+    seat_lock_conflict: ["count>=9"],
+    // Exactly 499 should have seat Unlocked (9 was a mistake during testing)
+    seat_lock_unexpected: ["count==0"],
+  },
 };
+/* Notes: Document how only 1 sucess is observed and 499 failures are observed when 500 users target the same seat */
 
-const BASE_URL = "http://localhost:5000/api";
+// setup() runs once, before any VU starts. We register new 500 VUs into the dbs each with their own tokens and then Run the test using these new VUs targetting the same seat id 147
+/* Since we should focus more on seatLock here */
+export function setup() {
+  const users = [];
+  const timestamp = Date.now();
 
-export default function () {
-  // Login
-  const loginRes = http.post(
-    `${BASE_URL}/auth/login`,
-    JSON.stringify({
-      email: "test@gmail.com",
-      password: "12345",
-    }),
-    {
-      headers: {
-        "Content-Type": "application/json",
+  for (let i = 0; i < USER_COUNT; i++) {
+    const email = `seatlock_${timestamp}_${i}@example.com`;
+    const registerRes = http.post(
+      `${BASE_URL}/auth/register`,
+      JSON.stringify({
+        name: `Seat Lock User ${i + 1}`,
+        email,
+        password: PASSWORD,
+      }),
+      {
+        headers: { "Content-Type": "application/json" },
       },
+    );
+
+    if (registerRes.status !== 201) {
+      throw new Error(
+        `Setup registration failed with status ${registerRes.status}: ${registerRes.body}`,
+      );
     }
-  );
 
-  if (loginRes.status !== 200) return;
+    const token = JSON.parse(registerRes.body).token;
+    users.push(token);
+  }
 
-  const token = JSON.parse(loginRes.body).token;
+  return { users };
+}
 
-  // ALL users target same seat
-  const seatId = 1;
-
+export default function (data) {
+  const token = data.users[__VU - 1];
   const lockRes = http.post(
-    `${BASE_URL}/seats/${seatId}/lock`,
+    `${BASE_URL}/seats/${EVENT_ID}/${SEAT_ID}/lock`,
     null,
     {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-    }
+    },
   );
 
+  if (lockRes.status === 200) {
+    lockSuccess.add(1);
+  } else if (lockRes.status === 409) {
+    lockConflict.add(1);
+  } else {
+    lockUnexpected.add(1);
+    console.error(`Unexpected status ${lockRes.status}: ${lockRes.body}`);
+  }
+
   check(lockRes, {
-    "lock success or conflict": (r) =>
+    "response is 200 (won) or 409 (conflict), nothing else": (r) =>
       r.status === 200 || r.status === 409,
   });
 }
