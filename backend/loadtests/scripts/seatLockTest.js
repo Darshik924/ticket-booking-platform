@@ -13,8 +13,8 @@ export default function () {
   const loginRes = http.post(
     `${BASE_URL}/auth/login`,
     JSON.stringify({
-      email: "hvk@gmail.com",
-      password: "123456789",
+      email: "test@gmail.com",
+      password: "12345",
     }),
     {
       headers: {

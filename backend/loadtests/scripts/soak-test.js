@@ -1,15 +1,14 @@
-
 import http from "k6/http";
 import { check, sleep } from "k6";
 
 // Soak test configuration
 export const options = {
-  vus: 100,          // Keep 100 users active
-  duration: "30m",   // Run continuously for 30 minutes
+  vus: 100, // Keep 100 users active
+  duration: "30m", // Run continuously for 30 minutes
 
   thresholds: {
-    http_req_failed: ["rate<0.05"],      // < 5% failures
-    http_req_duration: ["p(95)<2000"],   // 95% requests < 2 sec
+    http_req_failed: ["rate<0.05"], // < 5% failures
+    http_req_duration: ["p(95)<2000"], // 95% requests < 2 sec
   },
 };
 
@@ -21,13 +20,13 @@ export function setup() {
     `${BASE_URL}/auth/login`,
     JSON.stringify({
       email: "test@gmail.com",
-      password: "123456",
+      password: "12345",
     }),
     {
       headers: {
         "Content-Type": "application/json",
       },
-    }
+    },
   );
 
   const token = JSON.parse(loginRes.body).token;
@@ -43,15 +42,11 @@ export default function (data) {
   const seatId = ((__ITER * 10 + __VU) % 500) + 201;
 
   // Step 1: Lock seat
-  const lockRes = http.post(
-    `${BASE_URL}/seats/${seatId}/lock`,
-    null,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
+  const lockRes = http.post(`${BASE_URL}/seats/${seatId}/lock`, null, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
 
   // Skip booking if seat lock fails
   if (lockRes.status !== 200) {
@@ -70,7 +65,7 @@ export default function (data) {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-    }
+    },
   );
 
   // Verify booking success
