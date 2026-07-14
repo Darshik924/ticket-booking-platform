@@ -98,9 +98,9 @@ default ✓ [======================================] 8 VUs  2m0s
 
 Peak throughput observed in Grafana: **13.5 req/s**, with 884 total HTTP requests recorded over the run window. _(This is a point-in-time sampled peak from Grafana's panel, different from k6's own averaged throughput of ~7.27 req/s across the full test time — both are correct, they are just measuring different things.)_
 
-![Login Output](backend/loadtests/screenshots/k6/loginOutput.png)
+![Login Output](screenshots/k6/loginOutput.png)
 
-![Login Visual](backend/loadtests/screenshots/visualGrafana.png)
+![Login Visual](screenshots/visualGrafana/loginVisual.png)
 
 ---
 
@@ -183,7 +183,7 @@ seat_lock_race ✓ [======================================] 500 VUs  00.7s/30s  
 
 Since this is a single nearly the same milisecond burst of 500 bots fighting for 1 same seat. The time series dashboard will not have anything to plot in there. The k6 CLI summary above is the expected complete record for this test.
 
-![Seat Lock Output](backend/loadtests/screenshots/k6/seatLockOutput.png)
+![Seat Lock Output](./screenshots/k6/overSellingOutput.png)
 
 ---
 
@@ -278,13 +278,13 @@ ERRO[0432] thresholds on metrics 'booking_confirmed_total' have been crossed
 Screenshots of the seat-selection UI were captured at three points across the sale (start / mid / end) to visually confirm seats were locking in real time via the `seat_status_changed` socket broadcasts, viewed from different scroll positions (Page 1 and Page 3 here not inclu. Page 2 however every other scroll position (page) exhibits the same behaviour) within the 500-seat grid.
 
 **Start of sale timeline (minimal locking):**
-![Start Page 1 (FlashSale)](backend/loadtests/screenshots/k6/flashSale/stP1.png) ![Start Page 3 (FlashSale)](backend/loadtests/screenshots/k6/flashSale/stP3.png)
+![Start Page 1 (FlashSale)](screenshots/k6/flashSale/stP1.png) ![Start Page 3 (FlashSale)](screenshots/k6/flashSale/stP3.png)
 
 **Mid-sale (seats filling rapidly):**
-![Mid Page 1 (FlashSale)](backend/loadtests/k6/screenshots/flashSale/midP1.png) ![Mid Page 3 (FlashSale)](backend/loadtests/screenshots/k6/flashSale/midP3.png)
+![Mid Page 1 (FlashSale)](screenshots/k6/flashSale/midP1.png) ![Mid Page 3 (FlashSale)](screenshots/k6/flashSale/midP3.png)
 
 **End of sale timeline (grid heavily/fully locked):**
-![End Page 1 (FlashSale)](backend/loadtests/k6/screenshots/flashSale/endP1.png) ![End Page 3(FlashSale)](backend/loadtests/screenshots/k6/flashSale/endP3.png)
+![End Page 1 (FlashSale)](screenshots/k6/flashSale/endP1.png) ![End Page 3(FlashSale)](screenshots/k6/flashSale/endP3.png)
 
 > **Separate observation worth noting in the report:** across every screenshot, the header stat **"Available: 398/500" stays identical**, that stays the same since the updates which are being recieved are from redis hash cache and broadcasted over websockets, so actually there is no logic here to update this counter and hence seats show booked but this counter stays the same. Future improvments will get this issue resolved
 
@@ -292,9 +292,9 @@ Screenshots of the seat-selection UI were captured at three points across the sa
 
 Peak throughput: **2.34K req/s**, 556,084 total HTTP requests (closely matching k6's own count of 558,582 — the small difference is just sampling and scrap interval rounding). The VU graph shows a clean ramp from 0 to 1,500 over roughly the first 2 minutes, a sustained kind of plateau near 1,500 VUs for the following ~4 minutes, then a rapid drop back to 0 — matching the configured `ramping-vus` stages exactly and the actual user behaviour. As with the login and TTL tests, the **"Iterations" panel shows No data** — the same recurring Grafana query gap noted in earlier sections, not a testing issue.
 
-![Flash Sale Ouput](backend/loadtests/screenshotsk6/flashSale/flashSaleOutput.png)
+![Flash Sale Ouput](screenshots/k6/flashSale/flashSaleOutput.png)
 
-![Flash Sale Visual](backend/loadtests/screenshotsvisualGrafana/flashSaleVisual.png)
+![Flash Sale Visual](screenshots/visualGrafana/flashSaleVisual.png)
 
 `[SCREENSHOT — Postgres connection/CPU panel, if captured, showing the queue absorbing load rather than every request hitting the DB directly]`
 
@@ -381,9 +381,9 @@ Console output confirms the thing directly: conflicts were still being logged as
 
 Peak throughput: **75.0 req/s**, 1,300 total HTTP requests. The VU graph shows the two back to back scenarios clearly: a sharp step up to 100 VUs (wave one's quick initial-lock burst) followed by the sustained ~100-VU retry plateau (wave two), with the request_rate line coming down from a peak as conflicts gradually convert into successes over the retry window. As with the login test, the "Iterations" panel shows **No data** — a known gap in this Grafana dashboard's query configuration rather than a testing issue (the k6 CLI output above already confirms the real iteration counts).
 
-![Seat Abandon Output](backend/loadtests/screenshots/k6/seatAbandonTes.png)
+![Seat Abandon Output](screenshots/k6/seatAbandonTes.png)
 
-![Seat Abandon Visual](backend/loadtests/screenshots/visualGrafana/seatAbandonVisual.png)
+![Seat Abandon Visual](screenshots/visualGrafana/seatAbandonVisual.png)
 
 ---
 
@@ -466,9 +466,9 @@ read_heavy_spike ✓ [======================================] 0000/2000 VUs  1m4
 
 Peak throughput: **2.52K req/s**, 220,956 total HTTP requests — matching k6's own count exactly. The VU graph shows the spike shape sharp as configured: a nearly vertical ramp from baseline to 2,000 VUs, a brief hold at peak, then an equally sharp drop back down — all within roughly a 1-minute window, consistent with the compressed `30s → 10s → 20s → 10s → 30s` stage profile. Request rate (yellow) tracks the VU curve closely, while the error-rate line (red) stays low and flat throughout — visually confirming the 7.38% failure rate was steady background noise (the rate limiter) rather than a spike-triggered cascade of errors. As in every other test in this report, the **"Iterations" panel shows No data** — the same recurring Grafana dashboard query gap, unrelated to test correctness.
 
-![Spike Test Output](backend/loadtests/screenshots/k6/spikeTestOutput.png)
+![Spike Test Output](screenshots/k6/spikeTestOutput.png)
 
-![Spike Test Visual](backend/loadtests/screenshots/visualGrafana/spikeTestVisual.png)
+![Spike Test Visual](screenshots/visualGrafana/spikeTestVisual.png)
 
 ---
 
