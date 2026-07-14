@@ -10,22 +10,24 @@ import { Counter } from "k6/metrics";
   becomes lockable again - i.e. your cleanup relies on TTL expiry alone
   and doesn't leak/stall under concurrent retry pressure.
 
-  BEFORE RUNNING: temporarily drop your seat-lock TTL config to 10 seconds
-  (wherever acquireSeatAndLock / the Lua script's ARGV[2] TTL comes from -
-  likely an env var or constant). Revert it after this test.
+  For convenience we run the test with 10s TTL
+  BEFORE RUNNING: temporarily drop your LOCK_SEAT_TTL config to 10 seconds
+  inside out constants.ts
 */
 
 const BASE_URL = "http://localhost:5000/api";
 
-// ---- CONFIG: must match a seeded event in your DB with >= 100 seats ----
+// ---------CONFIG------------ --> Please change the config data to match your own data and what data u want to aim
+// These must match a seeded event in your DB with >= 100 seats ----
 const EVENT_ID = 7;
 const SEAT_ID_START = 676;
 const SEAT_COUNT = 100;
 
-// ---- CONFIG: must match whatever you temporarily set your lock TTL to ----
+// ---------CONFIG------------ --> Please change the config data to match your own data and what data u want to aim
+// This must match lock TTL to ----
 const LOCK_TTL_SECONDS = 10;
-
 const PASSWORD = "12345";
+
 
 const wave2ConflictCount = new Counter("wave2_conflict_total");
 const wave2SuccessCount = new Counter("wave2_success_total");
@@ -34,7 +36,7 @@ const wave1LockFailures = new Counter("wave1_lock_failures_total");
 
 export const options = {
   setupTimeout: "3m",
-  // Registering 200 users sequentially takes a while
+  // Registering 200 users sequentially will take a while
   scenarios: {
     wave_one_initial_lock: {
       executor: "per-vu-iterations",
@@ -61,11 +63,7 @@ export const options = {
   },
 };
 
-// setup() registers 200 distinct users once, before either scenario starts:
-// the first 100 become "wave one" (the abandoners), the next 100 become
-// "wave two" (the retriers). Index i is shared between both waves and maps
-// to the same seatId, so wave1 user i and wave2 user i are always fighting
-// over the exact same seat.
+// setup() registers 200 distinct users once, before either scenario starts: the first 100 become "wave one" (the abandoners), the next 100 become "wave two" (the retriers). Index i is shared between both waves and maps to the same seatId, so wave1 user i and wave2 user i are always fighting over the exact same seat.
 export function setup() {
   const timestamp = Date.now();
   const wave1Tokens = [];
@@ -94,16 +92,13 @@ export function setup() {
     );
   }
 
-  // Recorded so every VU can compute elapsed time relative to the same
-  // reference point, useful if you want to log/inspect exactly when the
-  // 409 -> 200 transition happens.
+  // Recorded so every VU can compute elapsed time relative to the same reference point, useful 
   const testStart = Date.now();
 
   return { wave1Tokens, wave2Tokens, testStart };
 }
 
-// Wave one: lock a seat, then deliberately do nothing else. Never calls
-// /pay. This is the "abandoned lock" - its only fate is to expire via TTL.
+// Wave one: lock a seat, then deliberately do nothing else. Never calls /pay. This is the "abandoned lock" - its only fate is to expire via TTL.
 export function wave1Lock(data) {
   const index = (__VU - 1) % data.wave1Tokens.length;
   const token = data.wave1Tokens[index];
@@ -135,8 +130,7 @@ export function wave1Lock(data) {
   sleep(2);
 }
 
-// Wave two: repeatedly attempts to lock the SAME seat wave1 grabbed.
-// Expect 409 while the lock is still held, then 200 once the TTL expires.
+// Wave two: repeatedly attempts to lock the SAME seat wave1 grabbed. Expect 409 while the lock is still held, then 200 once the TTL expires.
 export function wave2Retry(data) {
   const index = (__VU - 1) % data.wave2Tokens.length;
   const token = data.wave2Tokens[index];

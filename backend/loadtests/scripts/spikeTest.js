@@ -7,9 +7,7 @@ import { Counter } from "k6/metrics";
 
   Goal: prove that a sudden spike of concurrent readers doesn't break connections to Postgres or take down the server - i.e. connection pooling / caching absorbs the burst instead of every request hitting the DB directly.
 
-  These are public browsing routes, so unlike the seat-lock/flash-sale
-  scripts there is NO login/setup() here - anonymous traffic is exactly
-  what a real page-refresh spike would look like.
+  These are public browsing routes, so unlike the seat-lock/flash-sale scripts there is NO login/setup() here - anonymous traffic is exactly what a real page-refresh spike would look like.
 */
 
 // ---------CONFIG------------ --> Please change the config data to match your own data and what data u want to aim
