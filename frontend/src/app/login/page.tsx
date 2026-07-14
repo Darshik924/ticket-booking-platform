@@ -25,7 +25,7 @@ const Login = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-screen items-center justify-center bg-gray-800 px-4">
       <div className="w-full max-w-sm rounded-xl border border-border bg-card p-8 shadow-sm">
         <h1 className="mb-1 text-2xl font-semibold text-foreground">
           Welcome back
@@ -66,7 +66,7 @@ const Login = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-primary py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
+            className="w-full rounded-lg hover:bg-white hover:font-bold hover:text-black bg-primary py-2 text-sm font-medium text-primary-foreground transition duration-300 cursor-pointer disabled:opacity-50"
           >
             {loading ? "Logging in..." : "Log in"}
           </button>
@@ -74,7 +74,10 @@ const Login = () => {
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           No account?{" "}
-          <Link href="/register" className="font-medium text-primary underline">
+          <Link
+            href="/register"
+            className="font-medium text-primary hover:underline"
+          >
             Register
           </Link>
         </p>
@@ -83,7 +86,7 @@ const Login = () => {
           onClick={() => {
             window.location.href = "http://localhost:5000/api/auth/google";
           }}
-          className="mt-3 w-full rounded-lg border border-border bg-background py-2 text-foreground transition hover:bg-accent hover:text-accent-foreground"
+          className="mt-3 w-full rounded-lg hover hover:bg-black hover:text-white hover:font-bold bg-background py-2 text-foreground transition duration-150 cursor-pointer"
         >
           Continue with Google
         </button>

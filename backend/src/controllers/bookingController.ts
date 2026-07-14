@@ -8,34 +8,6 @@ import { success } from "zod";
 import { getBookingById } from "../services/booking.service";
 import { cancelBooking } from "../services/booking.service";
 
-export const createBookingHandler: RequestHandler = async (req, res) => {
-  const authReq = req as AuthRequest;
-
-  try {
-    const userId = authReq.user?.userId;
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized",
-      });
-    }
-
-    const { seatId } = req.body;
-
-    const booking = await createBooking(userId, seatId);
-
-    res.status(201).json({
-      success: true,
-      booking,
-    });
-  } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: error instanceof Error ? error.message : "Something went wrong",
-    });
-  }
-};
-
 export const getMyBookingsHandler: RequestHandler = async (req, res) => {
   const authReq = req as AuthRequest;
 

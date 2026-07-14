@@ -43,7 +43,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setToken(token);
     setUser(user);
 
-    router.push("/events");
+    router.push("/home");
   };
 
   const register = async (name: string, email: string, password: string) => {
@@ -56,7 +56,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setToken(token);
     setUser(user);
 
-    router.push("/events");
+    router.push("/home");
   };
 
   const logout = () => {

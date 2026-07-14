@@ -71,6 +71,7 @@ const EventDetails = ({ params }: PageProps) => {
           message: "",
         }));
         setSeats(response.data.seats || []);
+        console.log(seats);
       }
     } catch (err) {
       console.error("Failed to load seats map:", err);

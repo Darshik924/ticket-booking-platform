@@ -14,5 +14,4 @@ export const MAX_ACTIVE_USERS = 5; // Max Users that are allowed past waiting ro
 export const QUEUE_POLL_INTERVAL_MS = 5000; // How often frontend will polls queue position
 export const QUEUE_TTL_SECONDS = 86400; // 24 hours
 
-
 export { REDIS_KEYS };

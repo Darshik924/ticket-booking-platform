@@ -7,14 +7,15 @@ import { REDIS_KEYS } from "./constants";
 let io: Server;
 
 export const initSocket = (server: HttpServer) => {
+  const allowedOrigins = [
+    process.env.FRONTEND_URL || "http://localhost:3000",
+    process.env.FRONTEND_URL_ALT || "http://localhost:4000",
+  ].filter(Boolean);
+
   io = new Server(server, {
     cors: {
-      // 1. Swap the "*" wildcard out for your exact frontend URL
-      origin: process.env.FRONTEND_URL || "http://localhost:3000",
-
-      // 2. Explicitly allow credentials/cookies to pass through
+      origin: allowedOrigins,
       credentials: true,
-
       methods: ["GET", "POST"],
     },
   });

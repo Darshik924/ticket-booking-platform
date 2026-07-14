@@ -26,7 +26,7 @@ const Register = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-screen items-center justify-center bg-gray-800 px-4">
       <div className="w-full max-w-sm rounded-xl border border-border bg-card p-8 shadow-sm">
         <h1 className="mb-1 text-2xl font-semibold text-foreground">
           Create account
@@ -81,7 +81,7 @@ const Register = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-primary py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
+            className="w-full rounded-lg bg-primary py-2 hover:bg-white hover:text-black hover:font-bold text-sm font-medium text-primary-foreground transition cursor-pointer duration-150 disabled:opacity-50"
           >
             {loading ? "Creating account..." : "Register"}
           </button>
@@ -89,7 +89,10 @@ const Register = () => {
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Already have an account?{" "}
-          <Link href="/login" className="font-medium text-primary underline">
+          <Link
+            href="/login"
+            className="font-medium text-primary hover:underline"
+          >
             Log in
           </Link>
         </p>
