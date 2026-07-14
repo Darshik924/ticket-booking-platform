@@ -1,6 +1,8 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 
+// I am not sure what we wanted to test here So i left this unchanged and maybe we can later do this 
+
 // Read configuration from environment variables, fallback to defaults
 const BASE_URL = __ENV.BASE_URL || 'http://localhost:5000';
 const EVENT_ID = __ENV.EVENT_ID || '1';

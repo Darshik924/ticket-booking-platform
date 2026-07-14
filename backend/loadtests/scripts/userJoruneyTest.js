@@ -1,16 +1,15 @@
-
-// overall user flow through the ticket booking platfrom 
+// overall user flow through the ticket booking platfrom
 import http from "k6/http";
 import { check, sleep } from "k6";
 
 // End-to-End User Journey Test
 export const options = {
-  vus: 50,          // Simulate 50 users
-  duration: "5m",   // Run for 5 minutes
+  vus: 50, // Simulate 50 users
+  duration: "5m", // Run for 5 minutes
 
   thresholds: {
-    http_req_failed: ["rate<0.05"],      // Less than 5% failures
-    http_req_duration: ["p(95)<2000"],   // 95% requests under 2 sec
+    http_req_failed: ["rate<0.05"], // Less than 5% failures
+    http_req_duration: ["p(95)<2000"], // 95% requests under 2 sec
   },
 };
 
@@ -29,7 +28,7 @@ export function setup() {
       headers: {
         "Content-Type": "application/json",
       },
-    }
+    },
   );
 
   // Extract JWT token
@@ -60,9 +59,7 @@ export default function (data) {
   const eventId = events[0].id;
 
   // Step 2: Get seat map of selected event
-  const seatsRes = http.get(
-    `${BASE_URL}/events/${eventId}/seats`
-  );
+  const seatsRes = http.get(`${BASE_URL}/events/${eventId}/seats`);
 
   check(seatsRes, {
     "seat map fetched": (r) => r.status === 200,
@@ -72,48 +69,26 @@ export default function (data) {
   const seatId = ((__ITER * 10 + __VU) % 500) + 201;
 
   // Step 3: Lock seat
-  const lockRes = http.post(
-    `${BASE_URL}/seats/${seatId}/lock`,
-    null,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
+  const lockRes = http.post(`${BASE_URL}/seats/${seatId}/lock`, null, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
 
   // Skip booking if lock fails
   if (lockRes.status !== 200) {
     return;
   }
 
-  // Step 4: Create booking
-  const bookingRes = http.post(
-    `${BASE_URL}/bookings`,
-    JSON.stringify({
-      seatId,
-    }),
-    {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
-
-  check(bookingRes, {
-    "booking created": (r) => r.status === 201,
-  });
+  // Notes: Please note that we do not use POST /bookings end point anymore so update all the current logic related to that
+  // Step 4: should be something like hitting /pay and letting the background worker do its thing
 
   // Step 5: Fetch user's bookings
-  const myBookingsRes = http.get(
-    `${BASE_URL}/bookings/my`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
+  const myBookingsRes = http.get(`${BASE_URL}/bookings/my`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
 
   check(myBookingsRes, {
     "my bookings fetched": (r) => r.status === 200,
