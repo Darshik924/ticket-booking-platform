@@ -17,6 +17,7 @@ const BASE_URL = "http://localhost:5000/api/auth";
 // per-user/per-IP rate limiter and gives more realistic results.
 
 /* These are the dummy users you must have in your db Before trying to run this script */
+// Over here i would just try to login them and see if it works and note their report
 /* Spreading users would avoid tripping */
 const users = [
   { email: "loadtest1@test.com", password: "LoadTest123!" },

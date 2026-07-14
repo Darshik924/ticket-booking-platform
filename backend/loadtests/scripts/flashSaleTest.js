@@ -2,17 +2,22 @@ import http from "k6/http";
 import { check, sleep } from "k6";
 import { Counter, Trend } from "k6/metrics";
 
+// Before going through this file read seatLockTest.js as repetitve logic and explained there
+// In this Load test we try to simulate a flash sale test scene (Example: Release of Dhurandhar 2)
+
 const BASE_URL = "http://localhost:5000/api";
 
-// ---- CONFIG: must match a seeded event in your DB with exactly 500 seats ----
+// ---------CONFIG------------ --> Please change the config data to match your own data and what data u want to aim
+// These must match a seeded event in your DB with exactly 500 seats ----
 const EVENT_ID = 6;
 const SEAT_ID_START = 176;
 const SEAT_ID_END = 675; // 500 total seats -> cause we expected exactly 500 confirmed bookings
 // Every VU would try only three times to attempt a seat lock (dont need any fancy here)
 const MAX_RETRIES_PER_ITERATION = 3;
 
-// ---- CONFIG: users are registered fresh in setup(), no pre-seeding needed ----
-const VU_COUNT = 1500; // must match the ramping-vus stages' peak target below
+// ---------CONFIG------------ --> Please change the config data to match your own data and what data u want to aim
+const VU_COUNT = 1500;
+// These must match the ramping-vus stages' peak target below
 const PASSWORD = "12345";
 
 const bookingConfirmed = new Counter("booking_confirmed_total");
@@ -45,10 +50,9 @@ export const options = {
   },
 };
 
-// setup() runs once, before any VU starts. We register VU_COUNT brand-new
-// users here and hand back their tokens, indexed so each VU maps to exactly
-// one distinct account (data.users[__VU - 1]) - no shared tokens, and no
-// per-VU login round trip needed once the test is actually running.
+// setup() function runs once before any VU starts (this thing takes time),
+// We register VU_COUNT brand new users here and hand their tokens, indexed so each VU maps to exactly one distinct account (data.users[__VU - 1]) --> No shared tokens,
+// No per-VU login round trip needed once the test is actually running
 export function setup() {
   const users = [];
   const timestamp = Date.now();
@@ -189,7 +193,6 @@ export default function (data) {
 
   sleep(Math.random() * 1 + 0.5);
 }
-
 
 /* Notes: After the test we observe that only one booking_confirmed was recieved by K6
 But at the same time if you go to seat map UI you will see all the seats are either booked or locked and one by one they were getting booked right in front of me. So this means the Thundering Herd was handled beautifully althoguh we do not see that in our K6 logs and all the seats were locked at least and some of them were booked. Background worker was confirming each of theirs bookings asynchronously one by one and we managed to get the booking count not to exceed 500 and each user had their 1 booking accurately without any overselling 
