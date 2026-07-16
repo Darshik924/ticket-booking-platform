@@ -4,6 +4,26 @@ A high-concurrency event ticketing system built to handle flash-sale traffic lik
 
 ---
 
+## Table of Contents
+
+- [Executive Summary](#executive-summary)
+- [System Architecture](#system-architecture)
+- [Queueing Strategy](#queueing-strategy)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Data Model](#data-model)
+- [Redis Key Design](#redis-key-design)
+- [API Overiview](#api-overview)
+- [Getting Started](#getting-started)
+- [Frontend Routes](#frontend-routes)
+- [Load Test Overview](#load-testing)
+- [License](#license)
+
+- [Getting Started With LoadTests](./backend/loadtests/README.md#get-started-with-tests)
+
+---
+
 ## Executive Summary
 
 When ticket demand spikes, most booking systems fail in predictable ways: double bookings, stale seat maps, and login bottlenecks. This project addresses those failure modes with a layered architecture:
@@ -234,12 +254,14 @@ Configurable constants live in `backend/src/lib/constants.ts`:
 - Node.js 20+
 - PostgreSQL
 - Redis
+- Docker and Docker Compose (for services)
+- K6 CLI (for Load Testing)
 
 ### 1. Clone and install
 
 ```bash
 git clone https://github.com/Darshik924/ticket-booking-platform
-cd ticket
+cd ticket-booking-platform
 
 cd backend && npm install
 cd ../frontend && npm install
@@ -247,24 +269,16 @@ cd ../frontend && npm install
 
 ### 2. Backend environment
 
-Create `backend/.env`:
+Navigate into the server's core directory and copy the sample credentials provided as a blueprint to initialize your local variables. You can modify them if you wish to use a service outside of the Docker container, or a different Docker container.
 
-```env
-DATABASE_URL=postgresql://user:password@localhost:5432/ticket_db
-PORT=5000
-JWT_SECRET=your_jwt_secret
-JWT_EXPIRES_IN=7d
-REDIS_URL=redis://localhost:6379
-
-# Google OAuth (optional)
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-
-# Frontend URLs for CORS / OAuth redirect
-FRONTEND_URL=http://localhost:4000
-FRONTEND_URL_ALT=http://localhost:3000
-NODE_ENV=development
+```bash
+cd backend
+cp .env.example .env
 ```
+
+Open the generated `.env` file and customize your target secrets if necessary.
+
+---
 
 ### 3. Database setup
 
@@ -343,7 +357,7 @@ In order to Get started with Load Testing locally -
 
 ---
 
-## Load Testing & Concurrency Resilience
+## Load Testing
 
 TicketBook was built by the assumption that seats will be contested with proof — not just booked. To validate, the booking pipeline (Redis atomic locks → BullMQ payment queue → Postgres) was stress-tested with [k6](https://k6.io/), with all metrics streamed live to Prometheus and visualized in Grafana.
 

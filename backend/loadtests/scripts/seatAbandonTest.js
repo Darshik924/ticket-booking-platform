@@ -19,9 +19,9 @@ const BASE_URL = "http://localhost:5000/api";
 
 // ---------CONFIG------------ --> Please change the config data to match your own data and what data u want to aim
 // These must match a seeded event in your DB with >= 100 seats ----
-const EVENT_ID = 7;
-const SEAT_ID_START = 676;
-const SEAT_COUNT = 100;
+const EVENT_ID = 3;
+const SEAT_ID_START = 502;
+const SEAT_COUNT = 601;
 
 // ---------CONFIG------------ --> Please change the config data to match your own data and what data u want to aim
 // This must match lock TTL to ----

@@ -9,9 +9,9 @@ const BASE_URL = "http://localhost:5000/api";
 
 // ---------CONFIG------------ --> Please change the config data to match your own data and what data u want to aim
 // These must match a seeded event in your DB with exactly 500 seats ----
-const EVENT_ID = 6;
-const SEAT_ID_START = 176;
-const SEAT_ID_END = 675; // 500 total seats -> cause we expected exactly 500 confirmed bookings
+const EVENT_ID = 2;
+const SEAT_ID_START = 2;
+const SEAT_ID_END = 501; // 500 total seats -> cause we expected exactly 500 confirmed bookings
 // Every VU would try only three times to attempt a seat lock (dont need any fancy here)
 const MAX_RETRIES_PER_ITERATION = 3;
 

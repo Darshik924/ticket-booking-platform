@@ -13,7 +13,7 @@ import { Counter } from "k6/metrics";
 // ---------CONFIG------------ --> Please change the config data to match your own data and what data u want to aim
 const BASE_URL = "http://localhost:5000/api";
 const EVENT_ID_START = 1;
-const EVENT_ID_END = 7;
+const EVENT_ID_END = 3;
 
 const dbErrorCount = new Counter("db_error_responses_total");
 // 5xx specifically
