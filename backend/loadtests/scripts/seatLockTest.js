@@ -17,8 +17,8 @@ import { Counter } from "k6/metrics";
 // This is experimental data, you will have to change these for a accurate test
 // ---------CONFIG------------ --> Please change the config data to match your own data and what data u want to aim
 const BASE_URL = "http://localhost:5000/api";
-const SEAT_ID = 147;
-const EVENT_ID = 5;
+const SEAT_ID = 1;
+const EVENT_ID = 1;
 const USER_COUNT = 500;
 const PASSWORD = "12345";
 

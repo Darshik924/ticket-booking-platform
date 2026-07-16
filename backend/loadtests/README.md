@@ -12,7 +12,7 @@ All tests were run with [k6](https://k6.io/), with metrics streamed live to Prom
 
 ## Table of Contents
 
-- [Test Environment](#test-environment)
+- [Tools](#tools)
 - [0. Auth Load Base (Login Test)](#0-auth-load-base-login-test)
 - [1. Atomic Lock Race Condition Test](#1-atomic-lock-race-condition-test)
 - [2. Flash Sale End-to-End Flow Test](#2-flash-sale-end-to-end-flow-test)
@@ -21,11 +21,95 @@ All tests were run with [k6](https://k6.io/), with metrics streamed live to Prom
 - [Summary of Findings](#summary-of-findings)
 - [Get Started with Tests](#get-started-with-tests)
 
-## Test Environment
+---
 
-**`COMING SOON` - CONTAINERIZING THE APP**
+## Tools
+
+Skip this section from the table of contents if you are only interested in the report
+
+### Prometheus - Time Series Database
+
+Prometheus is a monitoring system and time-series database that stores metrics over time.
+
+Without Prometheus:
+
+```text
+K6 → Terminal Output Only
+```
+
+The results disappear after closing the terminal.
+
+With Prometheus:
+
+```text
+K6 → Prometheus → Persistent Metrics Storage
+```
+
+Prometheus stores metrics such as:
+
+| Time     | Requests | Response Time |
+| -------- | -------- | ------------- |
+| 12:00:01 | 5        | 800ms         |
+| 12:00:02 | 7        | 900ms         |
+| 12:00:03 | 10       | 1.2s          |
+
+This enables historical analysis and monitoring.
 
 ---
+
+### Grafana - Visualization Tool
+
+Grafana converts raw metrics into visual dashboards.
+
+Prometheus stores data, while Grafana provides:
+
+* Interactive Dashboards
+* Graphs
+* Tables
+* Alerts
+
+Architecture:
+
+```text
+Prometheus + Grafana = Monitoring Dashboard
+```
+
+This stack is widely used by companies such as:
+
+* Netflix
+* Uber
+* Amazon
+* Google
+
+---
+
+### K6 tool
+
+K6 is an open-source load testing tool used to simulate real-world traffic on APIs and services.
+
+#### What K6 Measures
+
+- Response Time
+- Number of Requests
+- Failure Rate
+- Throughput
+- Concurrent Users (VUs)
+
+#### Example
+
+```javascript
+export const options = {
+  vus: 20,
+  duration: "30s",
+};
+```
+
+This simulates **20 users** continuously accessing the API for **30 seconds**.
+
+---
+
+
+
 
 ## 0. Auth Load Base (Login Test)
 
@@ -296,8 +380,6 @@ Peak throughput: **2.34K req/s**, 556,084 total HTTP requests (closely matching 
 
 ![Flash Sale Visual](screenshots/visualGrafana/flashSaleVisual.png)
 
-`[SCREENSHOT — Postgres connection/CPU panel, if captured, showing the queue absorbing load rather than every request hitting the DB directly]`
-
 ---
 
 ## 3. Seat Expiry (TTL) Leak Test
@@ -486,13 +568,108 @@ Peak throughput: **2.52K req/s**, 220,956 total HTTP requests — matching k6's 
 
 ## Get Started with Tests
 
-**Note:** Please note that before performing any load tests locally you must go through the goal, make before hand arrangements (if required) for the specific load tests (eg: users data or seats in the database) - the config section mentioned in each of the files that is the script file for example the [Login Script](backend/loadtests/scripts/loginTest.js) inside the backend/loadtests/scripts/ to make sure..
+We will run the required testing services in Docker containers, which are already configured and set up so that you can easily test-run them. Please follow the steps in order.
 
-**Also Note:** that you have these services running on ports **-->**
+### System Prerequisites
 
-- PostgreSQL is running on port `5432`
-- Redis is running on port `6379`
-- Prometheus is running on port `9090` (configured with remote-write target)
-- Grafana is running on port `3000`
+Before proceeding, ensure your machine has the following dependencies installed natively:
 
-**`COMING SOON` - CONTAINERIZING THE APP**
+- **Node.js** (v18 or higher recommended)
+- **Docker & Docker Compose**
+- **k6 CLI** (for executing performance benchmarks)
+
+> **Important Security & Port Check:** If you run PostgreSQL, Redis, Prometheus, or Grafana natively on your host machine as background system services, please stop them before starting the containers to avoid port allocation conflicts.
+
+```bash
+# For Linux (systemd) users:
+sudo systemctl stop postgresql redis-server prometheus grafana-server
+
+# For macOS (Homebrew) users:
+brew services stop postgresql
+brew services stop redis
+brew services stop prometheus
+brew services stop grafana
+```
+
+---
+
+### 1. Environment Initialization
+
+Navigate into the server's core directory and copy the sample credentials provided as a blueprint to initialize your local variables. You can modify them if you wish to use a service outside of the Docker container, or a different Docker container.
+
+```bash
+cd backend
+cp .env.example .env
+```
+
+Open the generated `.env` file and customize your target secrets if necessary.
+
+---
+
+### 2. Spin Up Containerized Core Infrastructure
+
+Launch your isolated containerized database, caching layer, and other systems in the background using the dedicated load-testing Docker Compose file:
+
+```bash
+docker compose -f loadtests/docker/loadTesting.yml up -d
+```
+
+Wait approximately 5 seconds for the structural engines to complete interior checks. You can verify that all 4 systems (PostgreSQL, Redis, Prometheus, Grafana) are online by running:
+
+```bash
+docker ps
+```
+
+---
+
+### 3. Build Database Relational Schema & Inject Data
+
+Execute these database sync scripts, which are already prepared:
+
+```bash
+# Generate type definitions & push migration schemas
+npm run db:migrate
+
+# Fire up the TSX-managed seeding mechanism
+npm run db:seed
+```
+
+---
+
+### 4. Launch the Node.js Application Layer
+
+With your shared caching states and persistence models running inside the Docker network, spin up your local server:
+
+```bash
+npm run dev
+```
+
+> **Note:** Before performing any load tests locally, you must go through the goal of the test and make beforehand arrangements (if required) for the specific load test — e.g., user data for the login test, or seats in the database for the others (which will be added in the seeds, although check once). The config section is mentioned in each of the script files — for example, the [Seat Lock Script](scripts/seatLockTest.js) inside `backend/loadtests/scripts/` — make sure to review it.
+
+> **Also Note:** These services are running on the following ports:
+>
+> | Service    | Port   | Notes                               |
+> | ---------- | ------ | ----------------------------------- |
+> | PostgreSQL | `5432` |                                     |
+> | Redis      | `6379` |                                     |
+> | Prometheus | `9090` | configured with remote-write target |
+> | Grafana    | `3000` |                                     |
+>
+> If you wish to visualize the Grafana dashboards using your own current Grafana setup, you are free to do so on these ports, which we are utilizing.
+
+---
+
+### 5. Executing the Load Tests
+
+In order to run a load test, please match the config in the load test script (we have tried our best to match it beforehand, but still check once).
+
+Pick a load test from the tests presently done, and once you're finished with the configuration, run the following in order:
+
+> **Note:** You must replace `<testscript>.js` in the k6 command with the actual test script file name that you have selected. Tests for `seatMapTest.js` and `userJourneyTest.js` are not yet performed, and we advise you not to run them.
+
+```bash
+# K6 sends data points to Prometheus, and Prometheus is configured to stream data onto the Grafana dashboard
+K6_PROMETHEUS_RW_SERVER_URL=http://localhost:9090/api/v1/write K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM=true k6 run --out experimental-prometheus-rw ./loadtests/scripts/<testscript>.js
+```
+
+Watch a clean k6 output in your terminal satisfy the test requirements.
