@@ -52,6 +52,12 @@ const EventDetails = ({ params }: PageProps) => {
     connectionType: "none",
   });
 
+  // --- DERIVED STATE ---
+  const availableSeatsCount =
+    seats.length > 0
+      ? seats.filter((s) => s.status === "AVAILABLE").length
+      : event?.availableSeats ?? 0;
+
   // --- FETCH SEATS MAP ---
   const fetchSeats = useCallback(async () => {
     try {
@@ -405,7 +411,7 @@ const EventDetails = ({ params }: PageProps) => {
                       🎫 Availability
                     </p>
                     <p className="text-2xl font-bold">
-                      {event.availableSeats} / {event.totalSeats}
+                      {availableSeatsCount} / {event.totalSeats}
                     </p>
                     <p className="text-xs text-white/70 mt-1">
                       seats available
@@ -421,7 +427,7 @@ const EventDetails = ({ params }: PageProps) => {
                 Select Your Seats
               </h3>
               <p className="mb-6 text-sm text-muted-foreground">
-                Available: {event.availableSeats} / {event.totalSeats}
+                Available: {availableSeatsCount} / {event.totalSeats}
               </p>
 
               {mapQueueState.isWaiting ? (
