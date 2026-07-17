@@ -260,8 +260,8 @@ Configurable constants live in `backend/src/lib/constants.ts`:
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/Darshik924/ticket-booking-platform
-cd ticket-booking-platform
+git clone https://github.com/Darshik924/ticketBook
+cd ticketBook
 
 cd backend && npm install
 cd ../frontend && npm install
