@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Search } from 'lucide-react';
-import { useSearchParams, usePathname, useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
+import { useState } from "react";
+import { Search } from "lucide-react";
+import { useSearchParams, usePathname, useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 
 export default function Searchbar({ placeholder }: { placeholder: string }) {
   const searchParams = useSearchParams();
@@ -11,15 +11,15 @@ export default function Searchbar({ placeholder }: { placeholder: string }) {
   const { replace } = useRouter();
 
   // Local state to hold the input term before searching
-  const [term, setTerm] = useState(searchParams.get('query')?.toString() || '');
+  const [term, setTerm] = useState(searchParams.get("query")?.toString() || "");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const params = new URLSearchParams(searchParams);
     if (term.trim()) {
-      params.set('query', term.trim());
+      params.set("query", term.trim());
     } else {
-      params.delete('query');
+      params.delete("query");
     }
     replace(`${pathname}?${params.toString()}`);
   }
@@ -37,7 +37,7 @@ export default function Searchbar({ placeholder }: { placeholder: string }) {
           value={term}
           onChange={(e) => setTerm(e.target.value)}
         />
-        <Search className="absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-muted-foreground peer-focus:text-foreground" />
+        <Search className="absolute left-3 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-muted-foreground peer-focus:text-foreground" />
       </div>
       <Button type="submit" className="h-9 px-4 font-semibold">
         Search
