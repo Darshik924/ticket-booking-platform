@@ -19,31 +19,38 @@ export const authenticateUser: RequestHandler = async (
   res,
   next,
 ): Promise<void> => {
-  const authReq = req as AuthRequest; // By doing this we only tell TS that treat this same object as having user
+  const authReq = req as AuthRequest;
 
   const authHeader = authReq.headers.authorization;
   let token = authReq.headers.cookie?.match(/token=([^;]+)/)?.[1];
 
-  if (!token) {
-    if (authHeader && authHeader.startsWith("Bearer")) {
-      token = authHeader.split(" ")[1];
-    }
+  if (!token && authHeader && authHeader.startsWith("Bearer")) {
+    token = authHeader.split(" ")[1];
   }
 
   if (!token) {
+    res.status(401).json({ success: false, message: "Token missing" });
+    return;
+  }
+
+  let decoded: { userId: number; email: string };
+
+  try {
+    decoded = jwt.verify(token, process.env.JWT_SECRET as string) as {
+      userId: number;
+      email: string;
+    };
+  } catch (jwtError) {
+    // If it fails here, the token is genuinely bad or expired
     res.status(401).json({
       success: false,
-      message: "Token missing",
+      message: "Invalid or expired token",
     });
     return;
   }
 
+  // 2. Perform DB lookups outside the JWT catch-block
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as {
-      userId: number;
-      email: string;
-    };
-
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
       select: {
@@ -55,10 +62,7 @@ export const authenticateUser: RequestHandler = async (
     });
 
     if (!user) {
-      res.status(401).json({
-        success: false,
-        message: "User not found",
-      });
+      res.status(401).json({ success: false, message: "User not found" });
       return;
     }
 
@@ -70,10 +74,12 @@ export const authenticateUser: RequestHandler = async (
     };
 
     next();
-  } catch {
-    res.status(401).json({
+  } catch (dbError) {
+    // This exposes database connection pool issues during your load test!
+    console.error("❌ Auth Middleware DB Failure:", dbError);
+    res.status(500).json({
       success: false,
-      message: "Invalid or expired token",
+      message: "Database connection timeout during authentication",
     });
   }
 };

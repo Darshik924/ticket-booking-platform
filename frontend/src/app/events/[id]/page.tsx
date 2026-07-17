@@ -1,4 +1,4 @@
-"use client"; // Runs in browser (needed for hooks like useEffect/useState)
+"use client";
 
 import { useEffect, useState, use, useCallback } from "react";
 import { motion } from "motion/react";
@@ -17,7 +17,7 @@ interface PageProps {
 }
 
 const EventDetails = ({ params }: PageProps) => {
-  const { id } = use(params); // Grabs the event ID from the URL path (e.g., /events/2)
+  const { id } = use(params);
 
   const handleTimeOut = () => {
     redirect(`/events`);
@@ -56,7 +56,7 @@ const EventDetails = ({ params }: PageProps) => {
   const availableSeatsCount =
     seats.length > 0
       ? seats.filter((s) => s.status === "AVAILABLE").length
-      : event?.availableSeats ?? 0;
+      : (event?.availableSeats ?? 0);
 
   // --- FETCH SEATS MAP ---
   const fetchSeats = useCallback(async () => {
@@ -77,6 +77,7 @@ const EventDetails = ({ params }: PageProps) => {
           message: "",
         }));
         setSeats(response.data.seats || []);
+
         console.log(seats);
       }
     } catch (err) {

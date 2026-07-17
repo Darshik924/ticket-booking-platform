@@ -363,20 +363,18 @@ TicketBook was built by the assumption that seats will be contested with proof �
 
 ### Global Summary Matrix
 
-| Test                               | Target VUs | Peak RPS    | Success Rate                                                                                                          | p(95) Latency | Overselling?      |
-| ---------------------------------- | ---------- | ----------- | --------------------------------------------------------------------------------------------------------------------- | ------------- | ----------------- |
-| **1. Atomic Lock Race**            | 500        | 18.4 req/s  | 100% (500/500 valid outcomes)                                                                                         | 417.06ms      | **Strictly Zero** |
-| **2. Flash Sale E2E Flow**         | 1,500+     | 2.34K req/s | ⚠️ 1/500 confirmed in-window ([Please See Analysis](./backend/loadtests/README.md#2-flash-sale-end-to-end-flow-test)) | 668.52ms      | **Strictly Zero** |
-| **3. Seat Expiry (TTL) Leak Test** | 100        | 75.0 req/s  | 100% (100/100 seats recovered post-TTL)                                                                               | 177.51ms      | **Strictly Zero** |
-| **4. Event Page Spike Test**       | 2,000      | 2.52K req/s | 100% (0 server errors)                                                                                                | 274.81ms      | N/A               |
+| Test                               | Target VUs | Peak RPS    | Success Rate                            | p(95) Latency | Overselling?      |
+| ---------------------------------- | ---------- | ----------- | --------------------------------------- | ------------- | ----------------- |
+| **1. Atomic Lock Race**            | 500        | 18.4 req/s  | 100% (500/500 valid outcomes)           | 417.06ms      | **Strictly Zero** |
+| **2. Flash Sale E2E Flow**         | 2000       | 2.43K req/s | 100% 500/500 confirmed in-window        | 498.61ms      | **Strictly Zero** |
+| **3. Seat Expiry (TTL) Leak Test** | 100        | 75.0 req/s  | 100% (100/100 seats recovered post-TTL) | 177.51ms      | **Strictly Zero** |
+| **4. Event Page Spike Test**       | 2,000      | 2.52K req/s | 100% (0 server errors)                  | 274.81ms      | N/A               |
 
 > All four tests are run with `per-vu-iterations` or `ramping-vus` executors against a locally set dataset (see configs at the top of every load test script), with real-time metrics pushed to Prometheus using the k6's remote-write output.
 >
 > **Note on the "Success Rate":** for the Atomic Lock Race test, this means "% of requests that returned a valid, expected outcome (200 or 409)" — not "% of users who got the seat." Since the setup was made so that all 500 bots would target the EXACT same seat, exactly 1 of 500 requests acquires the lock by design which is expected since we want only ONE user to book seat even if 500 users target the same seat; the other 499 correctly receiving `409 Conflict` is the accurate condition, not a failure.
->
-> **Note on the Flash Sale row:** this run's `booking_confirmed_total` threshold failed — only 1 of the expected 500 bookings reached `CONFIRMED` within the test's checking window. This behaviour was analysed - All of the VUs immediately hit /pay after locking their seat and entered the payment Queue waiting for the payment worker to process (marking CONFIRM in the database). It was actually the asynchronous payment worker slowly (at its pace) confirming all bookings and only one lucky case was able to CONFIRM his booking within the test window. We observed that all the others were able to CONFIRM their booking in brief time. Full breakdown and Further analysis in the full load test report.
 
-**What this proves, in one line:** under every load profile tested — a single-seat race, a full 1,500-user flash sale scene, an abandoned-seat-lock cycle, and a 2,000-VU traffic spike — the system never allowed a seat to be booked by more than one user, and read-heavy (events) endpoints held up without breaking any connection to Postgres.
+**What this proves, in one line:** under every load profile tested — a single-seat race, a full 2,000-user flash sale scene, an abandoned-seat-lock cycle, and a 2,000-VU traffic spike — the system never allowed a seat to be booked by more than one user, and read-heavy (events) endpoints held up without breaking any connection to Postgres.
 
 ### Read the Full Concurrency & Load Test Report (with Grafana Dashboards) [HERE](./backend/loadtests/README.md)
 

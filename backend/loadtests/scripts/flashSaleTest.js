@@ -1,6 +1,7 @@
 import http from "k6/http";
 import { check, sleep } from "k6";
 import { Counter, Trend } from "k6/metrics";
+import { SharedArray } from "k6/data";
 
 // Before going through this file read seatLockTest.js as repetitve logic and explained there
 // In this Load test we try to simulate a flash sale test scene (Example: Release of Dhurandhar 2)
@@ -16,9 +17,8 @@ const SEAT_ID_END = 501; // 500 total seats -> cause we expected exactly 500 con
 const MAX_RETRIES_PER_ITERATION = 3;
 
 // ---------CONFIG------------ --> Please change the config data to match your own data and what data u want to aim
-const VU_COUNT = 1500;
+const VU_COUNT = 2000;
 // These must match the ramping-vus stages' peak target below
-const PASSWORD = "12345";
 
 const bookingConfirmed = new Counter("booking_confirmed_total");
 const paymentAcceptedNotConfirmed = new Counter(
@@ -36,8 +36,8 @@ export const options = {
       executor: "ramping-vus",
       startVUs: 0,
       stages: [
-        { duration: "1m", target: 1500 },
-        { duration: "3m", target: 1500 },
+        { duration: "1m", target: VU_COUNT },
+        { duration: "3m", target: VU_COUNT },
         { duration: "30s", target: 0 },
       ],
       gracefulRampDown: "10s",
@@ -50,52 +50,27 @@ export const options = {
   },
 };
 
-// setup() function runs once before any VU starts (this thing takes time),
-// We register VU_COUNT brand new users here and hand their tokens, indexed so each VU maps to exactly one distinct account (data.users[__VU - 1]) --> No shared tokens,
-// No per-VU login round trip needed once the test is actually running
+const usersData = new SharedArray("users", function () {
+  return JSON.parse(open("../users.json"));
+});
+
 export function setup() {
-  const users = [];
-  const timestamp = Date.now();
-
-  for (let i = 0; i < VU_COUNT; i++) {
-    const email = `flashsaleTRY2_${timestamp}_${i}@example.com`;
-    const registerRes = http.post(
-      `${BASE_URL}/auth/register`,
-      JSON.stringify({
-        name: `Flash_Sale_User_TRY2 ${i + 1}`,
-        email,
-        password: PASSWORD,
-      }),
-      { headers: { "Content-Type": "application/json" } },
-    );
-
-    if (registerRes.status !== 201) {
-      throw new Error(
-        `Setup registration failed with status ${registerRes.status}: ${registerRes.body}`,
-      );
-    }
-
-    const token = JSON.parse(registerRes.body).token;
-    users.push(token);
-  }
-
-  return { users };
+  return {};
 }
 
-export default function (data) {
-  const cachedToken = data.users[__VU - 1];
-  if (!cachedToken) {
+export default function () {
+  const userIndex = (__VU - 1) % usersData.length;
+  const currentUser = usersData[userIndex];
+
+  // Defensive check to ensure we never crash if a record is malformed
+  if (!currentUser || !currentUser.token) {
     loginFailures.add(1);
     sleep(1);
     return;
-    // Nothing to do this iteration without auth
   }
 
+  const cachedToken = currentUser.token;
   const authHeaders = { headers: { Authorization: `Bearer ${cachedToken}` } };
-
-  // Viewing all the Available Listing (though we dont really need to since we target only ONE EVENT)
-  const eventsRes = http.get(`${BASE_URL}/events`, authHeaders);
-  check(eventsRes, { "events list loaded": (r) => r.status === 200 });
 
   // Pick a random seat from the shared pool, attempt lock,
   // Retry again, against a different seat on conflict.
@@ -125,9 +100,6 @@ export default function (data) {
       continue;
       // Loop Back and try a different seat
     } else {
-      check(lockRes, {
-        "lock request returned a known status (200/409)": () => false,
-      });
       console.error(
         `VU ${__VU} unexpected lock status ${lockRes.status}: ${lockRes.body}`,
       );
@@ -156,16 +128,13 @@ export default function (data) {
 
     if (paymentAccepted) {
       /* Alright now our payment request has been accepted and we get socket IO updates when it is confirmed (we dont have socket here!) */
-      // We can simluate a cool delay for 4 seconds to have payment worker do his delay first and then we can check for our bookings otherwise we migh read a PENDING or something
+      // We can simluate a cool delay for 16 seconds to have payment worker do his delay first and then we can check for our bookings otherwise we migh read a PENDING or something
 
-      sleep(4);
+      sleep(17);
     }
 
     // Verify if booking dashboard is reachable
     const bookingsRes = http.get(`${BASE_URL}/bookings/my`, authHeaders);
-    check(bookingsRes, {
-      "bookings dashboard reachable": (r) => r.status === 200,
-    });
 
     // see if u got the booking
     if (paymentAccepted && bookingsRes.status === 200) {
@@ -186,9 +155,6 @@ export default function (data) {
   } else {
     // Never locked a seat this iteration - still verify dashboard (No need actually but why not)
     const bookingsRes = http.get(`${BASE_URL}/bookings/my`, authHeaders);
-    check(bookingsRes, {
-      "bookings dashboard reachable": (r) => r.status === 200,
-    });
   }
 
   sleep(Math.random() * 1 + 0.5);

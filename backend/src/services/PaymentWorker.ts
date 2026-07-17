@@ -21,22 +21,28 @@ const worker = new Worker(
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
       // 2. Perform DB operations atomically using a Prisma transaction
-      await prisma.$transaction(async (tx) => {
-        // Mark the seat as confirmed booked in DB
-        await tx.seat.update({
-          where: { id: seatId },
-          data: { status: "BOOKED" },
-        });
+      await prisma.$transaction(
+        async (tx) => {
+          // Mark the seat as confirmed booked in DB
+          await tx.seat.update({
+            where: { id: seatId },
+            data: { status: "BOOKED" },
+          });
 
-        // Update the booking status to CONFIRMED and payment status to PAID
-        await tx.booking.update({
-          where: { id: bookingId },
-          data: {
-            status: "CONFIRMED",
-            paymentStatus: "PAID",
-          },
-        });
-      });
+          // Update the booking status to CONFIRMED and payment status to PAID
+          await tx.booking.update({
+            where: { id: bookingId },
+            data: {
+              status: "CONFIRMED",
+              paymentStatus: "PAID",
+            },
+          });
+        },
+        {
+          maxWait: 5000,
+          timeout: 15000,
+        },
+      );
 
       // Update the seat status in the Redis Hash cache
       const hashKey = REDIS_KEYS.eventSeats(eventId);
@@ -146,6 +152,7 @@ const worker = new Worker(
   },
   {
     connection: redisClient.options,
+    concurrency: 100,
   },
 );
 
