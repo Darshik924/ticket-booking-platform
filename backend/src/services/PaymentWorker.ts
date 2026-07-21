@@ -1,10 +1,10 @@
 import { Worker } from "bullmq";
-import { prisma } from "../lib/prisma";
-import { redisClient } from "../lib/redis";
-import { REDIS_KEYS } from "../lib/constants";
-import { promoteQueueAndNotify } from "./queue.service";
-import { getIO } from "../lib/socket";
-import { getIntegerId } from "../utils/getIntegerIds";
+import { prisma } from "../lib/prisma.js";
+import { redisClient } from "../lib/redis.js";
+import { REDIS_KEYS } from "../lib/constants.js";
+import { promoteQueueAndNotify } from "./queue.service.js";
+import { getIO } from "../lib/socket.js";
+import { getIntegerId } from "../utils/getIntegerIds.js";
 
 // Create a background worker to process payment jobs from the "paymentQueue"
 const worker = new Worker(

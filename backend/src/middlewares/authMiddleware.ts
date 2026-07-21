@@ -1,7 +1,7 @@
 //this middleware will be used to protect routes that require authentication. It checks for the presence of a JWT token in the Authorization header, verifies it, and attaches the decoded user information to the request object for use in subsequent handlers.
 import { Request, RequestHandler } from "express";
 import jwt from "jsonwebtoken";
-import { prisma } from "../lib/prisma";
+import { prisma } from "../lib/prisma.js";
 
 // Define a custom request type that includes the user information from the JWT token
 export interface AuthRequest extends Request {

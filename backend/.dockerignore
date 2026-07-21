@@ -1,0 +1,12 @@
+node_modules/
+dist/
+src/generated/prisma/
+.env
+.env.development
+.env.production
+.git/
+.gitignore
+loadtests/
+README.md
+npm-debug.log
+*.md

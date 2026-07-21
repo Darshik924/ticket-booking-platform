@@ -5,12 +5,12 @@ import {
   listAllEvents,
   updateAnEvent,
   deleteAnEvent,
-} from "../controllers/eventController";
+} from "../controllers/eventController.js";
 import {
   adminAuthenticate,
   authenticateUser,
-} from "../middlewares/authMiddleware";
-import { getSeatMap } from "../controllers/seatController";
+} from "../middlewares/authMiddleware.js";
+import { getSeatMap } from "../controllers/seatController.js";
 
 const eventRouter = express.Router();
 // Get all the events for ther users

@@ -1,11 +1,11 @@
 import { RequestHandler } from "express";
-import { prisma } from "../lib/prisma";
-import { redisClient } from "../lib/redis";
-import { REDIS_KEYS } from "../lib/constants";
-import { paymentQueue } from "../lib/bullmq";
-import { getIO } from "../lib/socket";
-import { AuthRequest } from "../middlewares/authMiddleware";
-import { getIntegerId } from "../utils/getIntegerIds";
+import { prisma } from "../lib/prisma.js";
+import { redisClient } from "../lib/redis.js";
+import { REDIS_KEYS } from "../lib/constants.js";
+import { paymentQueue } from "../lib/bullmq.js";
+import { getIO } from "../lib/socket.js";
+import { AuthRequest } from "../middlewares/authMiddleware.js";
+import { getIntegerId } from "../utils/getIntegerIds.js";
 
 /**
  * Initiates the payment process for a locked seat by pushing a job to BullMQ.
