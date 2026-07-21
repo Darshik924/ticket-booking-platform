@@ -1,18 +1,18 @@
 import { Request, RequestHandler, Response } from "express";
-import { prisma } from "../lib/prisma";
-import { redisClient } from "../lib/redis";
-import { REDIS_KEYS } from "../lib/constants";
-import { promoteQueueAndNotify } from "../services/queue.service";
+import { prisma } from "../lib/prisma.js";
+import { redisClient } from "../lib/redis.js";
+import { REDIS_KEYS } from "../lib/constants.js";
+import { promoteQueueAndNotify } from "../services/queue.service.js";
 
 import {
   acquireSeatAndLock,
   releaseYourSeatLock,
   getLockHolder,
   getLockTTL,
-} from "../services/seatLock.service";
-import { AuthRequest } from "../middlewares/authMiddleware";
-import { getIntegerId } from "../utils/getIntegerIds";
-import { getIO } from "../lib/socket";
+} from "../services/seatLock.service.js";
+import { AuthRequest } from "../middlewares/authMiddleware.js";
+import { getIntegerId } from "../utils/getIntegerIds.js";
+import { getIO } from "../lib/socket.js";
 
 // POST /api/seats/:eventId/:seatId/lock
 const lockSeat: RequestHandler = async (req, res) => {

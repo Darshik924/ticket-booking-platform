@@ -1,11 +1,12 @@
 // changes User model
 // This file contains the authentication controller functions for handling user registration, login, and profile retrieval. It uses the authService functions to perform the necessary operations and sends appropriate HTTP responses based on the outcomes.
 import { Request, RequestHandler, Response } from "express";
-import { registerUser } from "../services/auth.service";
-import { loginUser } from "../services/auth.service";
-import { AuthRequest } from "../middlewares/authMiddleware";
-import { generateToken } from "../utils/jwtToken";
-import { prisma } from "../lib/prisma";
+import { registerUser } from "../services/auth.service.js";
+import { loginUser } from "../services/auth.service.js";
+import { AuthRequest } from "../middlewares/authMiddleware.js";
+import { generateToken } from "../utils/jwtToken.js";
+import { prisma } from "../lib/prisma.js";
+
 
 // Controller function to handle user registration
 export const register = async (req: Request, res: Response) => {

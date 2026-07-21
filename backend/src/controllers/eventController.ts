@@ -1,33 +1,19 @@
 import { Request, Response } from "express";
-import { prisma } from "../lib/prisma";
-import { getIntegerId } from "../utils/getIntegerIds";
-import { redisClient } from "../lib/redis";
-import { REDIS_KEYS } from "../lib/constants";
+import { prisma } from "../lib/prisma.js";
+import { getIntegerId } from "../utils/getIntegerIds.js";
+import { redisClient } from "../lib/redis.js";
+import { REDIS_KEYS } from "../lib/constants.js";
+import { searchEvents } from "../lib/events.js";
 
-// GET /api/events/ - get all of the events
+// GET /api/events/ - get all of the events (supports ?query=...)
 const listAllEvents = async (req: Request, res: Response) => {
   try {
-    const events = await prisma.event.findMany({
-      orderBy: { date: "asc" },
-      include: {
-        _count: { select: { seats: true } },
-      },
-    });
-
-    const eventsWithAvailability = await Promise.all(
-      events.map(async (event: any) => {
-        const availableSeats = await prisma.seat.count({
-          where: { eventId: event.id, status: "AVAILABLE" },
-        });
-
-        return { ...event, availableSeats };
-      }),
-    );
-    /* Awaiting all the promises for the events with the seats which are available and their counts of the available seats */
-
+    const query = req.query.query as string | undefined;
+    const eventsWithAvailability = await searchEvents(query);
     res.json({ events: eventsWithAvailability });
   } catch (err) {
     console.log("Error while fetching Events", err);
+    res.status(500).json({ error: "Failed to fetch events" });
   }
 };
 

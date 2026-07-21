@@ -1,12 +1,12 @@
-import { BookingStatus, PrismaClient } from "../generated/prisma";
-import { prisma } from "../lib/prisma";
-import { redisClient } from "../lib/redis";
-import { REDIS_KEYS } from "../lib/constants";
-import { promoteQueueAndNotify } from "./queue.service";
+import { BookingStatus, PrismaClient } from "../generated/prisma/index.js";
+import { prisma } from "../lib/prisma.js";
+import { redisClient } from "../lib/redis.js";
+import { REDIS_KEYS } from "../lib/constants.js";
+import { promoteQueueAndNotify } from "./queue.service.js";
 import {
   getLockHolder,
   releaseYourSeatLock,
-} from "./seatLock.service";
+} from "./seatLock.service.js";
 
 export const createBooking = async (userId: number, seatId: number) => {
   const seat = await prisma.seat.findUnique({

@@ -1,13 +1,13 @@
 import { Request, Response } from "express";
-import { redisClient } from "../lib/redis";
-import { prisma } from "../lib/prisma";
+import { redisClient } from "../lib/redis.js";
+import { prisma } from "../lib/prisma.js";
 import {
   REDIS_KEYS,
   MAX_ACTIVE_USERS,
   QUEUE_TTL_SECONDS,
-} from "../lib/constants";
-import { getIntegerId } from "../utils/getIntegerIds";
-import { AuthRequest } from "../middlewares/authMiddleware";
+} from "../lib/constants.js";
+import { getIntegerId } from "../utils/getIntegerIds.js";
+import { AuthRequest } from "../middlewares/authMiddleware.js";
 import jwt from "jsonwebtoken";
 
 // For frontend Map in order for user to select seats which he wants to book

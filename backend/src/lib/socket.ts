@@ -1,8 +1,8 @@
 import { Server as HttpServer } from "http";
 import { Server, Socket } from "socket.io";
 import jwt from "jsonwebtoken";
-import { redisClient } from "./redis";
-import { REDIS_KEYS } from "./constants";
+import { redisClient } from "./redis.js";
+import { REDIS_KEYS } from "./constants.js";
 
 let io: Server;
 

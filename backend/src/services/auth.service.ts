@@ -1,7 +1,7 @@
 // This file contains the authentication service functions for user registration and login. It interacts with the Prisma client to manage user data in the database, and uses bcrypt for password hashing and comparison. The service also generates JWT tokens for authenticated users.
 import bcrypt from "bcrypt"
-import { generateToken } from "../utils/jwtToken";
-import { prisma } from "../lib/prisma";
+import { generateToken } from "../utils/jwtToken.js";
+import { prisma } from "../lib/prisma.js";
 
 // Function to register a new user
 export const registerUser = async (

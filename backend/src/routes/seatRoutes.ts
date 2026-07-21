@@ -1,6 +1,6 @@
 import express from "express";
-import { lockSeat, unLockSeat } from "../controllers/seatLockController";
-import { authenticateUser } from "../middlewares/authMiddleware";
+import { lockSeat, unLockSeat } from "../controllers/seatLockController.js";
+import { authenticateUser } from "../middlewares/authMiddleware.js";
 
 const seatRouter = express.Router();
 

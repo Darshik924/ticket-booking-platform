@@ -1,6 +1,6 @@
-import { redisClient } from "../lib/redis";
-import { REDIS_KEYS, MAX_ACTIVE_USERS } from "../lib/constants";
-import { getIO } from "../lib/socket";
+import { redisClient } from "../lib/redis.js";
+import { REDIS_KEYS, MAX_ACTIVE_USERS } from "../lib/constants.js";
+import { getIO } from "../lib/socket.js";
 
 /**
  * Promotes waiting users from the queue to the active set if there are vacancies,
