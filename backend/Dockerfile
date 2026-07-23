@@ -50,4 +50,4 @@ COPY --from=builder /app/node_modules ./node_modules
 EXPOSE 5000
 
 # Run migrations and seed automatically before starting the server
-CMD npx prisma migrate deploy && node dist/prisma/seed.js && node dist/server.js
+CMD npx prisma migrate deploy && node dist/lib/seed.js && node dist/server.js
