@@ -38,19 +38,16 @@ COPY package*.json ./
 # Install only production dependencies
 RUN npm ci --omit=dev
 
-# Copy generated Prisma Client to where compiled code expects it
-COPY --from=builder /app/src/generated/prisma ./dist/generated/prisma
-
-# Copy generated Prisma Client to where source code expects it (useful for tsx/prisma tooling)
-COPY --from=builder /app/src/generated/prisma ./src/generated/prisma
-
 # Copy compiled JavaScript files
 COPY --from=builder /app/dist ./dist
 
 # Copy prisma schema & migrations folder (needed for migrations and seeding)
 COPY --from=builder /app/prisma ./prisma
 
+# Copy node_modules with generated Prisma client
+COPY --from=builder /app/node_modules ./node_modules
+
 EXPOSE 5000
 
-# Default start command (can be overridden in docker-compose)
-CMD ["node", "dist/server.js"]
+# Run migrations and seed automatically before starting the server
+CMD npx prisma migrate deploy && node dist/prisma/seed.js && node dist/server.js
