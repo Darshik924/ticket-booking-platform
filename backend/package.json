@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
-    "postbuild": "node -e \"import('fs').then(fs => { fs.mkdirSync('dist/lib/scripts', { recursive: true }); fs.copyFileSync('src/lib/scripts/lockSeat.lua', 'dist/lib/scripts/lockSeat.lua'); fs.copyFileSync('src/lib/scripts/releaseLock.lua', 'dist/lib/scripts/releaseLock.lua'); })\"",
+    "postbuild": "node -e \"import('fs').then(fs => { fs.mkdirSync('dist/lib/scripts', { recursive: true }); fs.copyFileSync('src/lib/scripts/lockSeat.lua', 'dist/lib/scripts/lockSeat.lua'); fs.copyFileSync('src/lib/scripts/releaseLock.lua', 'dist/lib/scripts/releaseLock.lua'); fs.cpSync('src/generated', 'dist/generated', { recursive: true }); })\"",
     "start": "node dist/server.js",
     "db:migrate": "npx prisma generate && npx prisma migrate deploy",
     "db:seed": "npx prisma db seed"
