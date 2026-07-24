@@ -231,7 +231,7 @@ const getSeatMap = async (req: Request, res: Response) => {
   if (needsHealing) {
     healingPipeline
       .exec()
-      .catch((err) => console.error("Self-healing cache sync failed:", err));
+      .catch((err: any) => console.error("Self-healing cache sync failed:", err));
   }
 
   res.status(200).json({

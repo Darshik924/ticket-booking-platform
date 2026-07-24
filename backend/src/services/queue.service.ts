@@ -38,7 +38,7 @@ export const promoteQueueAndNotify = async (eventId: number): Promise<void> => {
   const remainingUsers = await redisClient.zrange(queueKey, 0, -1);
 
   // Send real-time position updates to each remaining user in the queue
-  remainingUsers.forEach((userId, index) => {
+  remainingUsers.forEach((userId: string, index: number) => {
     const queuePosition = index + 1;
     io.to(`user:${userId}`).emit("queue_update", {
       status: "WAITING",

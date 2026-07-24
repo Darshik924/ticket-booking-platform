@@ -1,4 +1,4 @@
-import Redis from "ioredis";
+import { Redis } from "ioredis";
 
 const REDIS_URL = process.env.REDIS_URL || "redis://localhost:6379";
 
@@ -34,7 +34,7 @@ export const clearExistingQueues = async () => {
     } else {
       console.log(`[Redis Startup] No existing queue/active pool keys found to clean.`);
     }
-  } catch (err) {
+  } catch (err: any) {
     console.error("[Redis Startup] Failed to clear existing queues:", err);
   }
 };
@@ -43,4 +43,4 @@ redisClient.on("connect", () => {
   console.log("Redis connected");
   clearExistingQueues();
 });
-redisClient.on("error", (err) => console.error("Redis error:", err));
+redisClient.on("error", (err: any) => console.error("Redis error:", err));
