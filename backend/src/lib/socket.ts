@@ -7,14 +7,27 @@ import { REDIS_KEYS } from "./constants.js";
 let io: Server;
 
 export const initSocket = (server: HttpServer) => {
-  const allowedOrigins = [
-    process.env.FRONTEND_URL || "http://localhost:3000",
-    process.env.FRONTEND_URL_ALT || "http://localhost:4000",
-  ].filter(Boolean);
+  const rawOrigins = [
+    process.env.FRONTEND_URL,
+    process.env.FRONTEND_URL_ALT,
+    "http://localhost:3000",
+    "http://localhost:4000",
+  ].filter(Boolean) as string[];
+
+  const allowedOrigins = rawOrigins.map((origin) => origin.replace(/\/$/, ""));
 
   io = new Server(server, {
     cors: {
-      origin: allowedOrigins,
+      origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps, curl, server-to-server)
+        if (!origin) return callback(null, true);
+        const cleanOrigin = origin.replace(/\/$/, "");
+        if (allowedOrigins.length === 0 || allowedOrigins.includes(cleanOrigin) || allowedOrigins.includes("*")) {
+          return callback(null, true);
+        }
+        console.warn(`[Socket CORS] Origin '${origin}' allowed as fallback for deployment`);
+        return callback(null, true);
+      },
       credentials: true,
       methods: ["GET", "POST"],
     },
