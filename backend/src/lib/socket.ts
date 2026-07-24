@@ -88,7 +88,7 @@ export const initSocket = (server: HttpServer) => {
 
       // Promote next user in line
       const { promoteQueueAndNotify } =
-        await import("../services/queue.service");
+        await import("../services/queue.service.js");
       await promoteQueueAndNotify(eId);
     });
 
@@ -105,7 +105,7 @@ export const initSocket = (server: HttpServer) => {
 
         // Promote next user in line
         const { promoteQueueAndNotify } =
-          await import("../services/queue.service");
+          await import("../services/queue.service.js");
         await promoteQueueAndNotify(eId);
       }
     });
