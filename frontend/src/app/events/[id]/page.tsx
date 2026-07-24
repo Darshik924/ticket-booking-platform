@@ -58,6 +58,8 @@ const EventDetails = ({ params }: PageProps) => {
       ? seats.filter((s) => s.status === "AVAILABLE").length
       : (event?.availableSeats ?? 0);
 
+  const [activeBookingId, setActiveBookingId] = useState<number | null>(null);
+
   // --- FETCH SEATS MAP ---
   const fetchSeats = useCallback(async () => {
     try {
@@ -85,6 +87,41 @@ const EventDetails = ({ params }: PageProps) => {
       setError("Failed to load seats map.");
     }
   }, [id]);
+
+  // --- POLLING FALLBACK FOR PAYMENT STATUS ---
+  useEffect(() => {
+    if (!activeBookingId || (queueState.status !== "waiting" && queueState.status !== "processing")) {
+      return;
+    }
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await api.get(`/api/bookings/${activeBookingId}`);
+        const booking = res.data?.booking;
+        if (booking) {
+          if (booking.status === "CONFIRMED" || booking.paymentStatus === "PAID") {
+            setQueueState({
+              status: "success",
+              message: "Your payment was processed successfully! Your ticket is confirmed.",
+            });
+            setActiveBookingId(null);
+            fetchSeats();
+          } else if (booking.status === "CANCELLED") {
+            setQueueState({
+              status: "failed",
+              message: "Payment processing failed. Your seat lock has been released.",
+            });
+            setActiveBookingId(null);
+            fetchSeats();
+          }
+        }
+      } catch (err) {
+        console.error("Error polling booking status:", err);
+      }
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [activeBookingId, queueState.status, fetchSeats]);
 
   // --- FETCH DATA ON LOAD ---
   useEffect(() => {
@@ -137,13 +174,7 @@ const EventDetails = ({ params }: PageProps) => {
     );
 
     socket.on("connect_error", (error: any) => {
-      console.error("Socket connect error:", error);
-      setQueueState((current) => ({
-        ...current,
-        status: "failed",
-        message:
-          "Socket connection failed. Real-time queue updates may not be available.",
-      }));
+      console.warn("Socket connect error:", error);
       setMapQueueState((prev) => ({
         ...prev,
         connectionType: "polling",
@@ -325,6 +356,9 @@ const EventDetails = ({ params }: PageProps) => {
       });
 
       console.log("Payment queue job accepted:", response.data);
+      if (response.data?.bookingId) {
+        setActiveBookingId(response.data.bookingId);
+      }
       setQueueState((current) => ({
         ...current,
         status: "waiting",

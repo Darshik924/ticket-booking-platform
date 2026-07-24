@@ -2,7 +2,7 @@ import { RequestHandler } from "express";
 import { prisma } from "../lib/prisma.js";
 import { redisClient } from "../lib/redis.js";
 import { REDIS_KEYS } from "../lib/constants.js";
-import { paymentQueue } from "../lib/bullmq.js";
+import { paymentQueue } from "../lib/queue.js";
 import { getIO } from "../lib/socket.js";
 import { AuthRequest } from "../middlewares/authMiddleware.js";
 import { getIntegerId } from "../utils/getIntegerIds.js";
