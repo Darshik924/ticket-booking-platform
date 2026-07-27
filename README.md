@@ -86,7 +86,170 @@ The result is a booking flow that mirrors how production ticketing platforms beh
 
 ## Queueing Strategy
 
-ADD HERE
+TicketBook uses **two separate queues** that solve different problems during a flash sale:
+
+| Queue                    | Technology              | Purpose                                                                                              |
+| ------------------------ | ----------------------- | ---------------------------------------------------------------------------------------------------- |
+| **Virtual waiting room** | Redis sorted set + set  | Admission control — caps how many users can view and interact with the seat map at once              |
+| **Payment queue**        | BullMQ (`paymentQueue`) | Async payment (mock) — get payment processing from the HTTP request so the API stays fast under load |
+
+Both are for per-event (waiting room) or per-booking (payment), and both push live status to the client over Socket.IO with polling fallbacks.
+
+---
+
+### 1. Virtual Waiting Room (Seat Map Admission)
+
+When a user opens an event page, the first call to `GET /api/events/:eventId/seats` acts as the **entry gate**. The server sees whether the user is **ACTIVE** (can see the seat map) or **WAITING** (held in line).
+
+#### Data structures
+
+```text
+waiting_queue:{eventId}   →  Redis Sorted Set   (member = userId, score = join timestamp)
+active_users:{eventId}    →  Redis Set          (members currently viewing the seat map)
+```
+
+- **FIFO ordering** — users are scored by `Date.now()` on join. `ZRANGE` always returns the earliest joiners first.
+- **Idempotent join** — `ZADD NX` ensures a user is only enqueued once, even if they refresh or poll repeatedly.
+- **Key expiry** — `waiting_queue:{eventId}` gets a 24-hour TTL (`QUEUE_TTL_SECONDS`) on using first so stale keys do not linger forever.
+
+#### Admission flow
+
+```text
+User hits GET /events/:id/seats
+        │
+        ▼
+Already in active_users? ──yes──► Return 200 ACTIVE + seat map
+        │
+       no
+        │
+        ▼
+ZADD waiting_queue (NX, score = timestamp)
+        │
+        ▼
+Vacancies = MAX_ACTIVE_USERS − scard(active_users)
+        │
+        ▼
+Promote top N users from queue → active_users (remove from queue)
+        │
+        ▼
+User in active_users? ──yes──► Return 200 ACTIVE + seat map
+        │
+       no
+        │
+        ▼
+Return 202 WAITING + queuePosition (ZRANK + 1)
+```
+
+`MAX_ACTIVE_USERS` defaulted to **5** in `backend/src/lib/constants.ts`. Only that many users can hold an active seat-map slot at the same time; everyone else waits in line.
+
+#### When slots open up (promotion triggers)
+
+The helper `promoteQueueAndNotify()` in `queue.service.ts` runs whenever a vacancy appears. It Computes vacancies (`MAX_ACTIVE_USERS − active count`) then Moves the top N waiters from the sorted set into `active_users`. It also Emits `queue_promoted` to each promoted user (using their `user:{userId}` Socket.IO room), emits `queue_update` with new positions to everyone still waiting. We broadcast `queue_moved` to the event queue room for observability
+
+Promotion is triggered when a user **leaves the active pool**, which happens on:
+
+| Event                   | Source                                                    |
+| ----------------------- | --------------------------------------------------------- |
+| Payment succeeds        | `PaymentWorker` removes user from `active_users`          |
+| Payment fails           | `PaymentWorker` rolls back and removes user               |
+| User releases seat lock | `seatLockController` (cancel reservation)                 |
+| User completes booking  | `booking.service` (direct booking path)                   |
+| Socket disconnect       | `socket.ts` — user removed from queue **and** active pool |
+| Explicit leave          | `leave_event_queue` Socket event                          |
+
+This keeps the active pool size correctly: a user occupies a slot while seeing the map, locking a seat, and paying — and frees it when they finish, fail, abandon, or disconnect.
+
+#### User identity in the queue
+
+- **Authenticated users** — identified by JWT `userId`
+- **Guests** — identified by `x-guest-session-id` header or `guest_session` httpOnly cookie (auto-created on first visit)
+
+Both use the same Redis keys; guests participate in the waiting room without an account.
+
+#### Real-time updates and fallback
+
+| Transport        | When used                                  | Interval                             |
+| ---------------- | ------------------------------------------ | ------------------------------------ |
+| **Socket.IO**    | Authenticated users with a valid JWT token | Instant                              |
+| **HTTP polling** | Guests, or when WebSocket connection fails | Every 5 s (`QUEUE_POLL_INTERVAL_MS`) |
+
+Frontend events handled on `/events/[id]`:
+
+- `queue_update` — position changed while waiting
+- `queue_promoted` — user moved to ACTIVE; seat map is fetched immediately
+- `queue_moved` — general queue movement broadcast (logging / debugging)
+
+While waiting, the UI shows `MapQueuePanel` with live position; on promotion it swaps to the interactive seat grid.
+
+#### Startup cleanup
+
+On Redis connect, `clearExistingQueues()` scans and deletes all `waiting_queue:*` and `active_users:*` keys. This prevents ghost queue state from surviving a server restart when in-memory Socket connections are already gone.
+
+---
+
+### 2. Payment Queue (BullMQ)
+
+Once a user is **ACTIVE**, locks a seat, and clicks **Pay Now**, he moves to a second queue — this one is for **payment**, not seat-map admission.
+
+#### Flow
+
+```text
+POST /api/payment/pay
+        │
+        ▼
+Create PENDING booking in PostgreSQL
+        │
+        ▼
+Enqueue job → BullMQ paymentQueue
+        │
+        ▼
+Return 202 Accepted (API responds immediately)
+        │
+        ▼
+PaymentWorker picks up job (concurrency: 100)
+        │
+        ├── emit payment_processing  →  user
+        ├── simulate gateway delay (2 s)
+        ├── Prisma transaction: seat BOOKED, booking CONFIRMED + PAID
+        ├── update Redis seat cache, delete seat lock
+        ├── remove user from active_users
+        ├── promoteQueueAndNotify()  →  next waiter enters seat map
+        └── emit booking_confirmed + seat_status_changed
+```
+
+On failure, the worker rolls back the booking, releases the seat lock, removes the user from the active pool, promotes the next user, and emits `booking_failed`.
+
+#### Why a separate payment queue?
+
+- The HTTP handler returns in milliseconds (`202 Accepted`) instead of blocking on DB writes and simulated gateway latency.
+- BullMQ buffers spikes — during a 2,000-user flash sale, jobs queue safely while workers drain at controlled concurrency.
+- Load tests showed payment ingestion p95 around **46 ms** at the API layer while workers processed bookings asynchronously.
+
+The frontend `PaymentQueuePanel` tracks the job lifecycle: **waiting → processing → success / failed**, driven by Socket.IO events with a 2-second booking-status poll as backup.
+
+---
+
+### 3. How the two queues interact
+
+```text
+                    ┌─────────────────────────┐
+  Thousands of      │  Virtual Waiting Room   │  MAX_ACTIVE_USERS = 5
+  concurrent        │  (Redis FIFO queue)     │  at a time on seat map
+  visitors  ──────► └───────────┬─────────────┘
+                                │ promoted
+                                ▼
+                    ┌─────────────────────────┐
+                    │  Seat map + lock seat   │
+                    └───────────┬─────────────┘
+                                │ Pay Now
+                                ▼
+                    ┌─────────────────────────┐
+  API stays fast    │  BullMQ paymentQueue    │  Workers confirm in DB
+  (202 Accepted)    │  (async payment)        │  and free waiting-room slot
+                    └─────────────────────────┘
+```
+
+The waiting room protects **read and lock endpoints** from not bounded concurrency. The payment queue protects **write-heavy checkout** from blocking HTTP threads. Together they mirror how production ticketing platforms serialize access during a drop while still processing payments reliably at the back.
 
 ---
 
