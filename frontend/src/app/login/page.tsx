@@ -66,7 +66,7 @@ const Login = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-black text-white rounded-lg py-2 text-sm font-medium hover:bg-gray-800 disabled:opacity-50"
+            className={`w-full bg-black text-white rounded-lg py-2 text-sm font-medium hover:bg-gray-800 disabled:opacity-50 ${loading ? 'cursor-not-allowed' : 'cursor-pointer'}`}
           >
             {loading ? "Logging in..." : "Log in"}
           </button>
@@ -83,7 +83,7 @@ const Login = () => {
           onClick={() => {
             window.location.href = "http://localhost:5000/api/auth/google";
           }}
-          className="w-full mt-3 border border-gray-300 rounded-lg py-2"
+          className="w-full mt-3 border border-gray-300 rounded-lg py-2 cursor-pointer"
         >
           Continue with Google
         </button>

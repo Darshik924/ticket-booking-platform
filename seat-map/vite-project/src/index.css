@@ -1,4 +1,5 @@
 @import "tailwindcss";
+
 :root {
   --text: #6b6375;
   --text-h: #08060d;
@@ -77,20 +78,24 @@ h1 {
   font-size: 56px;
   letter-spacing: -1.68px;
   margin: 32px 0;
+
   @media (max-width: 1024px) {
     font-size: 36px;
     margin: 20px 0;
   }
 }
+
 h2 {
   font-size: 24px;
   line-height: 118%;
   letter-spacing: -0.24px;
   margin: 0 0 8px;
+
   @media (max-width: 1024px) {
     font-size: 20px;
   }
 }
+
 p {
   margin: 0;
 }
@@ -108,4 +113,30 @@ code {
   line-height: 135%;
   padding: 4px 8px;
   background: var(--code-bg);
+}
+
+@layer utilities {
+  .scrollbar::-webkit-scrollbar {
+    width: 20px;
+    cursor: pointer;
+    height: 20px;
+  }
+  
+  .scrollbar::-webkit-scrollbar-track {
+    cursor: pointer;
+    border-radius: 100vh;
+    background: #f7f4ed;
+  }
+  
+  .scrollbar::-webkit-scrollbar-thumb {
+    cursor: pointer;
+    background: #cbcce0;
+    border-radius: 100vh;
+    border: 3px solid #f6f7ed;
+  }
+  
+  .scrollbar::-webkit-scrollbar-thumb:hover {
+    cursor: pointer;
+    background: #a5a0c0;
+  }
 }

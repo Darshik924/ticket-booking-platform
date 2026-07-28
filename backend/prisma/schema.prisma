@@ -5,12 +5,11 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
+  engineType      = "library"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 
@@ -48,16 +47,36 @@ enum SeatStatus {
 
 model Event {
   id Int @id @default(autoincrement())
-  name String
-  venue String
-  date DateTime
-  totalSeats Int
+  title String
+  description String
+  tag String
+  category String
+  startDate DateTime
+  endDate DateTime?
+  duration String?
+  venueId Int
+  ageLimit String
+  totalSeats Int?
+  seatLayout Json @db.JsonB
   createdAt DateTime @default(now())
-  seats Seat[]
 }
 
+// ----------------------------------Venues------------------------------------
+
+model Venue {
+  id Int @id @default(autoincrement())
+  name String
+  address String
+  country String
+  city String
+  pincode String
+  state String
+  seatLayout Json @db.JsonB
+  createdAt DateTime @default(now())
+}
 // Event --> Seat again One to Many relationship
 
+/*
 model Seat {
   id Int @id @default(autoincrement())
   eventId Int
@@ -72,6 +91,7 @@ model Seat {
   @@unique([eventId, seatNumber])
   @@index([eventId, status]) // Speeds up queries filtering by event and seat status
 }
+*/
 
 // Seat to Booking One to One relationship, for now we keep one seat only for one booking
 
@@ -98,7 +118,7 @@ model Booking {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   user User @relation(fields: [userId], references: [id])
-  seat Seat @relation(fields: [seatId], references: [id])
+  //seat Seat @relation(fields: [seatId], references: [id])
 }
 
 // Booking --> User + Seat Many to One relationship, One booking belongs to one user and one seat

@@ -1,65 +1,80 @@
-import React, { Fragment, useEffect, useRef } from 'react'
-import { useParams,Link } from 'react-router-dom'
+import React, { Fragment, useEffect, useRef, useState } from 'react'
+import { useParams, Link, useNavigate } from 'react-router-dom'
+import axios from 'axios'
 
 function List() {
   const { type } = useParams()
-  const events = useRef([])
-  const venues = useRef([])
+  const navigate = useNavigate()
+  const [events, setEvents] = useState([])
+  const [venues, setVenues] = useState([])
 
   const getAllEvents = async () => {
-    const URL = 'http://localhost:5000/api/admin/getAllEvents'
-    
+    const URL = 'http://localhost:5000/api/events/'
+
     try {
       const response = await axios.get(URL)
-      events.current = response.data
-    } catch (error) {
-      console.error(error)
-    }
-  }
-  
-  const getAllVenues = async () => {
-    const URL = 'http://localhost:5000/api/admin/getAllVenues'
-    
-    try {
-      const response = await axios.get(URL)
-      venues.current = response.data
+      console.log(response.data)
+      setEvents(response.data.events)
     } catch (error) {
       console.error(error)
     }
   }
 
-  useEffect(()=>{
-    if(type === 'event'){
-      // getAllEvents()
-    }else{
-      // getAllVenues()
+  const getAllVenues = async () => {
+    const URL = 'http://localhost:5000/api/events/venues'
+
+    try {
+      const response = await axios.get(URL)
+      setVenues(response.data.venues)
+    } catch (error) {
+      console.error(error)
     }
-  },[])
+  }
+
+  const handleSelectChange = (e)=>{
+    
+    if(e.target.value){
+      console.log(e.target.value)
+      if(type === 'event'){
+        navigate(`/event/${e.target.value}`)
+      }else{
+        navigate(`/event/${e.target.value}`)
+      }
+    }
+    
+  }
+
+
+  useEffect(() => {
+    if (type === 'event') {
+      getAllEvents()
+    } else {
+      getAllVenues()
+    }
+  }, [])
 
   return (
     <>
       <div className='m-1'>
-        <label htmlFor={type} className='m-1'>{`Choose ${type==='event' ? 'an' : 'a'} ${type}`}</label>
-        <select name={type} id={type} className='border rounded pl-1 m-1'>
+        <label htmlFor={type} className='m-1'>{`Choose ${type === 'event' ? 'an' : 'a'} ${type}`}</label>
+        <select name={type} id={type} className='border rounded pl-1 m-1 cursor-pointer' onChange={handleSelectChange}>
           {type === 'event' ?
             (
               <Fragment>
                 <option value=''>{`-- Choose an Event --`}</option>
-                {events.current.map((element, index) => {
-                  <option key={index} value={element.id}>
-                    <Link to={`/event/${element.id}`}>{element.title}</Link>
-                  </option>
+                {events.map((element, index) => {
+                  return (
+                    <option key={index} value={element.id}>{element.title}</option>
+                  )
                 })}
               </Fragment>
             ) :
             (
               <Fragment>
                 <option value=''>{`-- Choose a Venue --`}</option>
-                {venues.current.map((element, index) => {
+                {venues.map((element, index) => {
                   return (
-                    <option key={index} value={element.id}>
-                      <Link to={`/venue/${element.id}`}>{`${element.name}, ${element.city}, ${element.state}, ${element.country}, ${element.pincode}`}</Link>
-                    </option>
+                    <option key={index} value={element.id}> {`${element.name}, ${element.city}, ${element.state}, ${element.country}, ${element.pincode}`} </option>
                   )
                 })}
               </Fragment>

@@ -1,4 +1,6 @@
-import { useEffect, useRef, useState, Fragment } from 'react'
+"use client";
+
+import { useEffect, useRef, useState, Fragment, type MouseEvent } from 'react'
 import panzoom from 'panzoom'
 import layout from './layout.json'
 import {
@@ -9,21 +11,78 @@ import {
   House,
 } from 'lucide-react'
 
+type SeatData = {
+  seatName?: string
+  seatPrice?: number | string
+  seatTier?: string
+  [key: string]: unknown
+}
+
+type SeatPoint = {
+  x: number | string
+  y: number | string
+  [key: string]: unknown
+}
+
+type SeatLayout = {
+  x: number | string
+  y: number | string
+  [key: string]: unknown
+}
+
+type Section = {
+  d?: string
+  textAngle?: number | string
+  name?: string
+  color?: string
+  textFont?: number | string
+  price?: string | number
+  textX?: number | string
+  textY?: number | string
+  points?: Record<string, SeatPoint>
+  seats?: Record<
+    string,
+    {
+      groupX: number | string
+      groupY: number | string
+      angle: number | string
+      seatRadius: number | string
+      seat_data: Record<string, SeatData & SeatLayout>
+      [key: string]: unknown
+    }
+  >
+  [key: string]: unknown
+}
+
+type SeatLayoutMap = Record<string, Section>
+
+type SeatReference = {
+  seatKey: string
+  sectionKey: string
+  layoutKey: string
+}
+
+type Transform = {
+  x: number
+  y: number
+  scale: number
+}
+
 function UserDisplay() {
-  const [seatLayout, setseatLayout] = useState({})
-  const [selectedSeat, setSelectedSeat] = useState([])
-  const [hoveredSeat, setHoveredSeat] = useState(null)
-  const [hoveredSection, setHoveredSection] = useState('')
-  const [transform, setTransform] = useState({
+  const [seatLayout, setseatLayout] = useState<SeatLayoutMap>(layout as SeatLayoutMap)
+  const [selectedSeat, setSelectedSeat] = useState<string[]>([])
+  const [hoveredSeat, setHoveredSeat] = useState<string | null>(null)
+  const [hoveredSection, setHoveredSection] = useState<string | null>(null)
+  const [transform, setTransform] = useState<Transform>({
     x: 0,
     y: 0,
     scale: 1,
   })
   const [GridMouseDown, setGridMouseDown] = useState(false)
 
-  const sceneRef = useRef(null)
-  const layoutRef = useRef(null)
-  const panzoomInstance = useRef(null)
+  const sceneRef = useRef<SVGSVGElement | null>(null)
+  const layoutRef = useRef<HTMLDivElement | null>(null)
+  const panzoomInstance = useRef<ReturnType<typeof panzoom> | null>(null)
 
   const width =
     typeof window !== 'undefined'
@@ -41,7 +100,7 @@ function UserDisplay() {
       boundsPadding: 1,
     })
 
-    panzoomInstance.current.on('transform', (e) => {
+    panzoomInstance.current.on('transform', (e: { getTransform: () => Transform }) => {
       const currentTransform = e.getTransform()
 
       setTransform({
@@ -59,14 +118,14 @@ function UserDisplay() {
   }, [])
 
   useEffect(() => {
-    setseatLayout(layout)
+    setseatLayout(layout as SeatLayoutMap)
   }, [])
 
   const handleSectionClick = (
-    event,
-    textX,
-    textY,
-    targetScale
+    _event: MouseEvent<SVGGElement>,
+    textX: number | undefined,
+    textY: number | undefined,
+    targetScale: number
   ) => {
     const panzoom = panzoomInstance.current
 
@@ -76,12 +135,13 @@ function UserDisplay() {
 
     const point = svg.createSVGPoint()
 
-    point.x = (textX / 800) * width
-    point.y = (textY / 800) * width
+    point.x = ((textX ?? 0) / 800) * width
+    point.y = ((textY ?? 0) / 800) * width
 
-    const svgCoords = point.matrixTransform(
-      svg.getScreenCTM().inverse()
-    )
+    const screenCTM = svg.getScreenCTM()
+    if (!screenCTM) return
+
+    const svgCoords = point.matrixTransform(screenCTM.inverse())
 
     const centerX = svgCoords.x
     const centerY = svgCoords.y
@@ -98,8 +158,9 @@ function UserDisplay() {
     }
   }
 
-  const handleSeatHover = (e) => {
-    const seat = e.target.closest('circle')
+  const handleSeatHover = (e: MouseEvent<SVGGElement>) => {
+    const target = e.target
+    const seat = target instanceof Element ? target.closest('circle') : null
 
     if (!seat) {
       setHoveredSeat(null)
@@ -113,8 +174,9 @@ function UserDisplay() {
     }
   }
 
-  const handleSeatClick = (e) => {
-    const seat = e.target.closest('circle')
+  const handleSeatClick = (e: MouseEvent<SVGGElement>) => {
+    const target = e.target
+    const seat = target instanceof Element ? target.closest('circle') : null
 
     if (!seat) return
 
@@ -177,7 +239,7 @@ function UserDisplay() {
     let price = 0
 
     for (const selected of selectedSeat) {
-      const seat = JSON.parse(selected)
+      const seat: SeatReference = JSON.parse(selected)
 
       const seatData =
         seatLayout?.[seat.sectionKey]
@@ -192,7 +254,7 @@ function UserDisplay() {
     return price
   }
 
-  const removeSeat = (index) => {
+  const removeSeat = (index: number) => {
     const newSelectedSeat = [...selectedSeat]
 
     newSelectedSeat.splice(index, 1)
@@ -200,8 +262,8 @@ function UserDisplay() {
     setSelectedSeat(newSelectedSeat)
   }
 
-  const getSeatData = (selected) => {
-    const seat = JSON.parse(selected)
+  const getSeatData = (selected: string) => {
+    const seat: SeatReference = JSON.parse(selected)
 
     return {
       seat,

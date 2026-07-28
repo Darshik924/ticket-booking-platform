@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "Event" ADD COLUMN     "totalSeats" INTEGER,
+ALTER COLUMN "duration" DROP NOT NULL,
+ALTER COLUMN "endDate" DROP NOT NULL;
