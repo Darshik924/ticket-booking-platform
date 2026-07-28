@@ -67,7 +67,7 @@ function Event() {
           <form action="post" ref={formRef} onSubmit={(e) => { e.preventDefault() }}>
             <div className='m-1'>
               <label htmlFor="title" className='m-1'>Event Title</label>
-              <input type="text" id='title' name='title' placeholder='Enter Event Title' className='pl-1 border rounded m-1' />
+              <input type="text" id='title' name='title' placeholder='Enter Event Title' className='pl-1 border rounded m-1' required/>
             </div>
 
             <div className='m-1'>

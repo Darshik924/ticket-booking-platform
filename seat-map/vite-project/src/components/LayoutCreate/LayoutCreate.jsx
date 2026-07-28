@@ -64,9 +64,9 @@ function LayoutCreate({ setDisplayLayout, setformData }) {
           return next;
         });
       } else {
-        if(JSON.stringify(editingSeat) === JSON.stringify({ secIdx, grpIdx, col, row, seatKey })){
+        if (JSON.stringify(editingSeat) === JSON.stringify({ secIdx, grpIdx, col, row, seatKey })) {
           setEditingSeat(null)
-        }else{
+        } else {
           setEditingSeat({ secIdx, grpIdx, col, row, seatKey });
         }
       }
@@ -286,6 +286,7 @@ function LayoutCreate({ setDisplayLayout, setformData }) {
         textY: sectionName[idx].y,
         textAngle: sectionName[idx].rotate,
         textFont: sectionName[idx].font,
+        color : sectionName[idx].color,
         seats: {},
         points: {}
       }
@@ -354,7 +355,7 @@ function LayoutCreate({ setDisplayLayout, setformData }) {
     <>
       <div className="flex">
 
-        <div className="w-125" pointerEvents="none">
+        <div className="w-137" pointerEvents="none">
           <ImageUpload setImage={setImage} />
 
 
@@ -779,9 +780,19 @@ function LayoutCreate({ setDisplayLayout, setformData }) {
                       }} />
 
                       <div>
-                        <label htmlFor='sectionPrice'>Enter Section Price (₹)</label>
-                        <input type="Number" min={0} id='sectionPrice' ref={(el) => { sectionPriceInput.current[index] = el }} className='border border-white rounded m-1 pl-1' />
+                        <label htmlFor={`section${index}price`}>Enter Section Price (₹)</label>
+                        <input type="number" min={0} id={`section${index}price`} ref={(el) => { sectionPriceInput.current[index] = el }} className='border border-white rounded m-1 pl-1' />
                       </div>
+
+                      <div>
+                        <label htmlFor={`section${index}color`}>Enter Section Color</label>
+                        <input type="color" id={`section${index}color`} className='border border-white rounded m-1 pl-1' onChange={(e) => {
+                          let newSectionName = [...sectionName]
+                          newSectionName[index].color = e.target.value
+                          setSectionName(newSectionName)
+                        }} />
+                      </div>
+
                       <button className='pl-2 pr-2 m-2 block border border-white rounded-2xl bg-red-900 cursor-pointer' onClick={() => {
                         let newSectionName = [...sectionName]
                         newSectionName[index].done = true
@@ -866,6 +877,7 @@ function LayoutCreate({ setDisplayLayout, setformData }) {
                   let font = sectionName[index]?.font ? sectionName[index].font : 10
                   let textX = sectionName[index]?.x ? sectionName[index].x : element[0].x
                   let textY = sectionName[index]?.y ? sectionName[index].y : element[0].y
+                  let color = sectionName[index]?.color ? sectionName[index].color : 'pink'
 
                   if (element[0].figure === 'arc') {
                     d += `A${polyarc[index][0].radius} ${polyarc[index][0].radius} 0 ${polyarc[index][i].remaining} ${polyarc[index][0].inverted} ${element[0]['x']} ${element[0]['y']} `
@@ -874,7 +886,7 @@ function LayoutCreate({ setDisplayLayout, setformData }) {
                   return (
                     <Fragment key={index} >
                       <g onClick={(e) => { handleSectionClick(e, textX, textY) }}>
-                        <path d={d} stroke='red' strokeWidth={0.2} fillOpacity='0.5' fill='pink' ></path>
+                        <path d={d} stroke='red' strokeWidth={0.2} fillOpacity='0.5' fill={color} ></path>
                         <text x={textX} y={textY} textAnchor='middle' pointerEvents={'none'} dominantBaseline='central' fontSize={font} transform={`rotate(${rotationAngle},${textX},${textY})`} fill='white'>{text}</text>
                       </g>
                       {sectionName[index]?.seats?.length > 0 && (
@@ -913,7 +925,7 @@ function LayoutCreate({ setDisplayLayout, setformData }) {
                                           fillColor = '#ff4d4f'
                                         } else if (isEditing) {
                                           fillColor = '#1DB954'
-                                        } else if (ele.seat_data[`row${row_idx}-col${col_idx}`]?.seatName && (ele.seat_data[`row${row_idx}-col${col_idx}`]?.seatName !== `row:${row_idx + 1}-col:${col_idx + 1}`)) {
+                                        } else if (ele.seat_data[`row${row_idx}-col${col_idx}`]?.seatName && (ele.seat_data[`row${row_idx}-col${col_idx}`]?.seatName !== `Row-${row_idx + 1}|Col-${col_idx + 1}`)) {
                                           fillColor = '#FFAC1C'
                                         } else {
                                           fillColor = '#1890ff'

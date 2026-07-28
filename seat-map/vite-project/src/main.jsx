@@ -10,6 +10,7 @@ import Layout from './Layout.jsx'
 import { createBrowserRouter, createRoutesFromElements, Route, RouterProvider } from 'react-router-dom'
 import List from './components/List/List.jsx'
 import LayoutDisplay from './components/LayoutDisplay/LayoutDisplay.jsx'
+import UserDisplay from './components/UserDisplay/UserDisplay.jsx'
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -19,6 +20,7 @@ const router = createBrowserRouter(
       <Route path='venue/:type' element={<Venue />} />
       <Route path='list/:type' element={<List />} />
       <Route path='layoutDisplay' element={<LayoutDisplay />} />
+      <Route path='userDisplay' element={<UserDisplay />} />
     </Route>
   )
 )
