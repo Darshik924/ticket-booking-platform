@@ -13,7 +13,7 @@
     "db:seed": "npx prisma db seed"
   },
   "prisma": {
-    "seed": "npx tsx dist/lib/seed.js"
+    "seed": "npx tsx src/lib/seed.ts"
   },
   "keywords": [],
   "author": "",

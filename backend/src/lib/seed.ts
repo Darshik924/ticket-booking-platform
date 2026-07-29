@@ -8,7 +8,7 @@ const sampleTest2 = {
   dateT2: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
   totalSeatsT2: 500,
   imageUrlT2:
-    "https://images.unsplash.com/photo-1626568941852-70bc179e493e?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "https://plus.unsplash.com/premium_photo-1661306437817-8ab34be91e0c?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
 };
 
 const sampleTest1 = {
@@ -17,7 +17,7 @@ const sampleTest1 = {
   dateT1: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
   totalSeatsT1: 1,
   imageUrlT1:
-    "https://images.unsplash.com/photo-1626568941852-70bc179e493e?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "https://images.unsplash.com/photo-1502136969935-8d8eef54d77b?q=80&w=1169&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
 };
 
 const sampleTest3 = {
@@ -94,5 +94,3 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
-
-
