@@ -38,7 +38,7 @@ function List() {
       if(type === 'event'){
         navigate(`/event/${e.target.value}`)
       }else{
-        navigate(`/event/${e.target.value}`)
+        navigate(`/venue/${e.target.value}`)
       }
     }
     

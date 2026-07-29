@@ -1,12 +1,13 @@
 import { useState, useEffect, Fragment, useRef, useCallback } from 'react'
 import panzoom from 'panzoom'
 import ImageUpload from '../ImageUpload/ImageUpload.jsx'
-import { Link } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import axios from 'axios'
 import layout from './layout.json'
 
-function LayoutCreate({ setDisplayLayout, formData }) {
+function LayoutCreate({ setDisplayLayout, formData, venueDetail }) {
   const [count, setCount] = useState(0)
+  const [venue, setVenue] = useState(null)
   const [radius, setRadius] = useState([])
   const [inverted, setInverted] = useState([])
   const [remaining, setRemaining] = useState([])
@@ -57,6 +58,7 @@ function LayoutCreate({ setDisplayLayout, formData }) {
   // Tracks selected seats for deletion. 
   const [selectedSeats, setSelectedSeats] = useState(new Set());
   const [selectDeleteSeat, setSelectDeleteSeat] = useState([]);
+  const { venueId } = useParams()
 
   // Tracks the seat currently opened for detail editing
   const [editingSeat, setEditingSeat] = useState(null);
@@ -64,6 +66,19 @@ function LayoutCreate({ setDisplayLayout, formData }) {
   // This is to stop scrolling the page when changing input
   const containerRef = useRef(null);
 
+  useEffect(() => {
+    if (venueId) {
+      axios.get(`http://localhost:5000/api/events/venue/${venueId}`)
+        .then((response) => {
+          setseatLayout(response.data.venue.seatLayout)
+          console.log(response.data.venue)
+          setVenue(response.data.venue)
+        })
+        .catch((error) => {
+          console.error(error)
+        })
+    }
+  }, [])
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -470,27 +485,99 @@ function LayoutCreate({ setDisplayLayout, formData }) {
   }
 
   const saveSeatLayout = async () => {
-    console.log({ ...formData, seatLayout })
-    let newLayout = { ...seatLayout }
+    if (!venueDetail) {
+      if (!venueId) {
+        try {
+          console.log({ ...formData, seatLayout })
+          let newLayout = { ...seatLayout }
 
-    Object.entries(newLayout).map(([section_key, section_val]) => {
+          Object.entries(newLayout).map(([section_key, section_val]) => {
 
-      Object.entries(section_val.seats).map(([layout_key, layout_val]) => {
+            Object.entries(section_val.seats).map(([layout_key, layout_val]) => {
+              if (layout_val.deletedSeats) {
+                for (let seat of layout_val.deletedSeats) {
+                  delete newLayout[section_key].seats[layout_key].seat_data[seat]
+                }
+                delete newLayout[section_key].seats[layout_key].deletedSeats
+              }
+            })
+          })
 
-        for (let seat of layout_val.deletedSeats) {
-          delete newLayout[section_key].seats[layout_key].seat_data[seat]
+          console.log(newLayout)
+          console.log({ ...formData, newLayout })
+          navigator.clipboard.writeText(JSON.stringify(seatLayout));
+          setDisplayLayout('none')
+          const response = await axios.post('http://localhost:5000/api/events', { ...formData, seatLayout: newLayout })
+          console.log(response)
+          alert("Saved")
+
+        } catch (error) {
+          console.error(error)
+          alert('Sorry there is a proble in saving Event')
         }
-        delete newLayout[section_key].seats[layout_key].deletedSeats
-      })
-    })
+      }
+      else {
+        try {
+          let newLayout = { ...seatLayout }
 
-    console.log(newLayout)
-    console.log({ ...formData, newLayout })
-    navigator.clipboard.writeText(JSON.stringify(seatLayout));
-    setDisplayLayout('none')
-    const response = await axios.post('http://localhost:5000/api/events', { ...formData, seatLayout: newLayout })
-    console.log(response)
-    alert("Saved")
+          Object.entries(newLayout).map(([section_key, section_val]) => {
+
+            delete newLayout[section_key].price
+            Object.entries(section_val.seats).map(([layout_key, layout_val]) => {
+
+              Object.entries(layout_val.seat_data).map(([seat_key, seat_val]) => {
+
+                delete newLayout[section_key].seats[layout_key].seat_data[seat_key].seatPrice
+              })
+              console.log(layout_val.deletedSeats)
+              if (layout_val.deletedSeats) {
+                for (let seat of layout_val.deletedSeats) {
+                  delete newLayout[section_key].seats[layout_key].seat_data[seat]
+                }
+                delete newLayout[section_key].seats[layout_key].deletedSeats
+              }
+            })
+          })
+
+          const response = await axios.put('http://localhost:5000/api/events/venue', { venue: { ...venue, seatLayout: newLayout } })
+          console.log(response)
+          alert("Saved")
+        } catch (error) {
+          console.error(error)
+          alert('Sorry there is a proble in saving Venue')
+        }
+      }
+
+    } else {
+      try {
+        console.log(venueDetail)
+        let newLayout = { ...seatLayout }
+
+        Object.entries(newLayout).map(([section_key, section_val]) => {
+
+          delete newLayout[section_key].price
+          Object.entries(section_val.seats).map(([layout_key, layout_val]) => {
+
+            Object.entries(layout_val.seat_data).map(([seat_key, seat_val]) => {
+
+              delete newLayout[section_key].seats[layout_key].seat_data[seat_key].seatPrice
+            })
+            if (layout_val.deletedSeats) {
+              for (let seat of layout_val.deletedSeats) {
+                delete newLayout[section_key].seats[layout_key].seat_data[seat]
+              }
+              delete newLayout[section_key].seats[layout_key].deletedSeats
+            }
+          })
+        })
+        const response = await axios.put('http://localhost:5000/api/events/venue', { ...venueDetail, seatLayout: newLayout })
+        console.log(response)
+        alert("Saved")
+      } catch (error) {
+        console.error(error)
+        alert('Sorry there is a proble in saving Venue')
+      }
+    }
   }
 
   const layoutGenerate = (layout_key, key, newSeatLayout) => {
@@ -1957,7 +2044,7 @@ function LayoutCreate({ setDisplayLayout, formData }) {
                     return (
                       <Fragment key={index} >
                         <g>
-                          <path d={d} strokeWidth={strokeWidth} stroke={stroke} fillOpacity={sectionName[index]?.done ? 0.5 : 1} fill={color} pointerEvents={displayOnly ? 'none' : ''}></path>
+                          <path d={d} strokeWidth={strokeWidth} stroke={stroke} fillOpacity={(!sectionName[index] || sectionName[index]?.done) ? 0.5 : 1} fill={color} pointerEvents={displayOnly ? 'none' : ''}></path>
                           <text x={textX} y={textY} textAnchor='middle' pointerEvents={'none'} dominantBaseline='central' fontSize={font} transform={`rotate(${rotationAngle},${textX},${textY})`} fill='white'>{text}</text>
                           {!sectionName[index]?.done && (
                             <Fragment>

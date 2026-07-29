@@ -19,6 +19,7 @@ const router = createBrowserRouter(
       <Route path='list/:type' element={<List />} />
       <Route path='layoutDisplay' element={<LayoutDisplay />} />
       <Route path='userDisplay' element={<UserDisplay />} />
+      <Route path='layoutCreate/:venueId' element={<LayoutCreate />} />
     </Route>
   )
 )

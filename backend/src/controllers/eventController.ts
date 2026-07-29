@@ -144,9 +144,6 @@ const getVenue = async (req: Request, res: Response) => {
 
   const venue = await prisma.venue.findUnique({
     where: { id: newId },
-    select: {
-      seatLayout: true
-    }
   });
 
   if (!venue) {
@@ -246,6 +243,35 @@ const createAnEvent = async (req: Request, res: Response) => {
   }
 };
 
+const createVenue = async (req: Request, res: Response) => {
+  const data = req.body
+  console.log(data)
+  try {
+    const venue = await prisma.venue.create(
+      {
+        data: {
+          name: data.venueName as string,
+          address: data.venueAddress as string,
+          country: data.venueCountry as string,
+          city: data.venueCity as string,
+          pincode: data.venuePincode as string,
+          state: data.venueState as string,
+          seatLayout: data.seatLayout
+        },
+        select: {
+          id: true
+        }
+      }
+    )
+    res.status(201).json({ venue });
+  } catch (error: any) {
+    console.log(error)
+    res.status(500).json({ error: error.message || "Failed to create venue" });
+  }
+
+
+}
+
 // PUT api/events/:eventId
 const updateAnEvent = async (req: Request, res: Response) => {
   const { eventId } = req.params;
@@ -325,6 +351,38 @@ const updateAnEvent = async (req: Request, res: Response) => {
   }
 };
 
+const updateVenue = async (req: Request, res: Response) => {
+  const { venue } = await req.body;
+  console.log(venue)
+  const newId = getIntegerId(venue.id);
+
+  if (isNaN(newId)) {
+    return res.status(400).json({ error: "Invalid venue ID format" });
+  }
+  try {
+    const updatedVenue = await prisma.venue.update({
+      where:{
+        id:newId
+      },
+      data:{
+        name:venue.name,
+        address:venue.address,
+        state:venue.state,
+        city:venue.city,
+        pincode:venue.pincode,
+        country:venue.country,
+        seatLayout:venue.seatLayout
+      }
+    });
+
+    res.status(200).json({ venue: updatedVenue });
+  } catch (error) {
+    // Handle cases where the venue ID doesn't exist
+    console.log(error)
+    res.status(404).json({ error: "Venue not found or failed to update" });
+  }
+};
+
 // DELETE api/events/:eventId
 const deleteAnEvent = async (req: Request, res: Response) => {
   const { eventId } = req.params;
@@ -344,7 +402,7 @@ const deleteAnEvent = async (req: Request, res: Response) => {
     // await redisClient.del(REDIS_KEYS.eventSeats(newId));
 
     res.status(200).json({
-      message: "Event and associated seats deleted successfully",
+      message: "Event and associated details deleted successfully",
       event: deletedEvent,
     });
   } catch (error) {
@@ -352,4 +410,27 @@ const deleteAnEvent = async (req: Request, res: Response) => {
   }
 };
 
-export { listAllEvents, listAllVenues, getEvent, createAnEvent, updateAnEvent, deleteAnEvent, getVenue };
+const deleteVenue = async (req: Request, res: Response) => {
+  const { venueId } = req.params;
+  const newId = getIntegerId(venueId);
+
+  if (isNaN(newId)) {
+    return res.status(400).json({ error: "Invalid venue ID format" });
+  }
+
+  try {
+
+    const deletedVenue = await prisma.venue.delete({
+      where: { id: newId },
+    });
+
+    res.status(200).json({
+      message: "Venue and associated seats deleted successfully",
+      venue: deletedVenue,
+    });
+  } catch (error) {
+    res.status(404).json({ error: "Venue not found" });
+  }
+}
+
+export { listAllEvents, listAllVenues, getEvent, createAnEvent, updateAnEvent, deleteAnEvent, updateVenue, getVenue, createVenue, deleteVenue}

@@ -7,6 +7,9 @@ import {
   deleteAnEvent,
   listAllVenues,
   getVenue,
+  createVenue,
+  deleteVenue,
+  updateVenue
 } from "../controllers/eventController";
 import {
   adminAuthenticate,
@@ -25,10 +28,13 @@ const eventRouter = express.Router();
 eventRouter.get("/", listAllEvents);
 eventRouter.get("/venues", listAllVenues); 
 eventRouter.get("/venue/:venueId", getVenue); 
+eventRouter.put("/venue", updateVenue); 
+eventRouter.delete("/venue/:venueId", deleteVenue); 
 eventRouter.get("/:eventId", getEvent);
 
 // These are the Admin routes which only an admin account will be able to access and perform operations as we dont want users hitting requests for changing the details for an event
 eventRouter.post("/", createAnEvent);
+eventRouter.post("/venue", createVenue);
 eventRouter.put("/:eventId", updateAnEvent);
 // eventRouter.put("/:eventId", authenticateUser, adminAuthenticate, updateAnEvent);
 eventRouter.delete("/:eventId", deleteAnEvent);
