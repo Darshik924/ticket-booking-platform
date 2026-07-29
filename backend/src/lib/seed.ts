@@ -4,20 +4,20 @@ const prisma = new PrismaClient();
 
 const sampleTest2 = {
   nameT2: "Sample Event Test 2",
-  venueT2: "Rio",
+  venueT2: "Carnival",
   dateT2: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
   totalSeatsT2: 500,
   imageUrlT2:
-    "https://images.unsplash.com/photo-1626568941852-70bc179e493e?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "https://images.unsplash.com/photo-1502137914655-3ab2fb4dc4cc?q=80&w=2069&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
 };
 
 const sampleTest1 = {
   nameT1: "Sample Event Test 1",
-  venueT1: "Rio",
+  venueT1: "Event",
   dateT1: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
   totalSeatsT1: 1,
   imageUrlT1:
-    "https://images.unsplash.com/photo-1626568941852-70bc179e493e?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
 };
 
 const sampleTest3 = {
