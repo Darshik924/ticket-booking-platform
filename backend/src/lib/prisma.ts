@@ -1,7 +1,4 @@
-import 'dotenv/config';
-import { Pool } from 'pg';
-import { PrismaPg } from '@prisma/adapter-pg';
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from "../generated/prisma/client";
 
 if (!process.env.DATABASE_URL) {
     throw new Error("ERROR: DATABASE_URL is not defined in your environment variables!");
