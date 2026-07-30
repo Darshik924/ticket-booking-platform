@@ -19,6 +19,7 @@ function LayoutDisplay({ setDisplayLayout, formData, venueId }) {
   const rows = 50
   const columns = 50
   const width = 800
+  const navigate = useNavigate()
 
 
   useEffect(() => {
@@ -95,13 +96,17 @@ function LayoutDisplay({ setDisplayLayout, formData, venueId }) {
             }
           })
         })
+      }else{
+        if(!section.price){
+          layout[section_key].price = ''
+        }
       }
     })
     const data = { ...formData, seatLayout : layout }
     console.log(data)
     await axios.post('http://localhost:5000/api/events', data)
     alert('Saved')
-    const navigate = useNavigate('/')
+    navigate('/')
     setDisplayLayout('none')
   }
 

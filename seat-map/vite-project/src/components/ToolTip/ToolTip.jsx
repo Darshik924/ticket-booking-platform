@@ -1,93 +1,228 @@
-import React, { useState } from 'react';
+// import { useMemo } from "react";
 
-const  ToolTip = ({
-  x,
-  y,
-  text,
-  children,
-  position = 'top', // 'top' | 'bottom' | 'left' | 'right'
-  offset = 5,     // Distance from the target point
-}) => {
-  const [isVisible, setIsVisible] = useState(false);
+// function SeatTooltip({
+//   x,
+//   y,
 
-  // Split multi-line string into an array (handles \n or direct multiline strings)
-  const lines = Array.isArray(text) ? text : text.split('\n');
+//   // Customizable dimensions
+//   width = 150,
+//   height = 82,
 
-  // Compute position offsets for foreignObject and Arrow
-  const getLayout = () => {
-    switch (position) {
-      case 'bottom':
-        return {
-          foX: x - 100,
-          foY: y + offset,
-          align: 'items-start justify-center',
-          arrowPoints: `${x},${y + offset} ${x - 6},${y + offset + 6} ${x + 6},${y + offset + 6}`,
-        };
-      case 'left':
-        return {
-          foX: x - 200 - offset,
-          foY: y - 50,
-          align: 'items-center justify-end',
-          arrowPoints: `${x - offset},${y} ${x - offset - 6},${y - 6} ${x - offset - 6},${y + 6}`,
-        };
-      case 'right':
-        return {
-          foX: x + offset,
-          foY: y - 50,
-          align: 'items-center justify-start',
-          arrowPoints: `${x + offset},${y} ${x + offset + 6},${y - 6} ${x + offset + 6},${y + 6}`,
-        };
-      case 'top':
-      default:
-        return {
-          foX: x - 100,
-          foY: y - 100 - offset,
-          align: 'items-end justify-center',
-          arrowPoints: `${x},${y - offset} ${x - 6},${y - offset - 6} ${x + 6},${y - offset - 6}`,
-        };
-    }
-  };
+//   // right | left | top | bottom
+//   direction = "right",
 
-  const { foX, foY, align, arrowPoints } = getLayout();
+//   // Distance between seat and tooltip
+//   gap = 8,
 
-  return (
-    <g
-      onMouseEnter={() => setIsVisible(true)}
-      onMouseLeave={() => setIsVisible(false)}
-      onFocus={() => setIsVisible(true)}
-      onBlur={() => setIsVisible(false)}
-      className="cursor-pointer"
-    >
-      {/* Target SVG Child Element */}
-      {children}
+//   seat = {
+//     number: "A12",
+//     category: "Premium",
+//     price: "₹450",
+//     status: "Available",
+//   },
 
-      {isVisible && (
-        <g className="pointer-events-none">
-          {/* SVG Arrow Pointing Directly to (x, y) */}
-          <polygon points={arrowPoints} className="fill-white" />
+//   // Customizable colors
+//   background = "#FFFFFF",
+//   border = "#CBD5E1",
+//   textColor = "#0F172A",
+//   secondaryColor = "#64748B",
+//   accentColor = "#2563EB",
+//   availableColor = "#16A34A",
+//   unavailableColor = "#DC2626",
+// }) {
+//   const tooltipTransform = useMemo(() => {
+//     switch (direction) {
+//       case "left":
+//         return `translate(${x - width - gap}, ${y - height / 2})`;
 
-          {/* HTML Multi-Line Container */}
-          <foreignObject
-            x={foX}
-            y={foY}
-            width="200"
-            height="100"
-            className="overflow-visible"
-          >
-            {/* <div className={`flex w-full h-full ${align}`}>
-              <div className="w-fit rounded-lg bg-white px-3 py-2 text-[2px] font-medium leading-relaxed text-gray-800 shadow-xl backdrop-blur-sm">
-                {lines.map((line, index) => (
-                  <p key={index} className="whitespace-pre-wrap break-words w-fit">
-                    {line}
-                  </p>
-                ))}
-              </div>
-            </div> */}
-          </foreignObject>
-        </g>
-      )}
-    </g>
-  );
-};
+//       case "top":
+//         return `translate(${x - width / 2}, ${y - height - gap})`;
 
-export default ToolTip;
+//       case "bottom":
+//         return `translate(${x - width / 2}, ${y + gap})`;
+
+//       case "right":
+//       default:
+//         return `translate(${x + gap}, ${y - height / 2})`;
+//     }
+//   }, [x, y, width, height, gap, direction]);
+
+//   /*
+//     Keep the tooltip content proportional when
+//     width / height changes.
+//   */
+//   const padding = Math.max(8, width * 0.07);
+
+//   const titleSize = Math.max(9, width * 0.073);
+//   const textSize = Math.max(7, width * 0.06);
+
+//   const dividerY = height * 0.31;
+
+//   const row1Y = height * 0.52;
+//   const row2Y = height * 0.75;
+
+//   const pointerSize = Math.min(8, width * 0.05);
+
+//   const statusColor =
+//     seat.status === "Available"
+//       ? availableColor
+//       : unavailableColor;
+
+//   const pointer = () => {
+//     switch (direction) {
+//       case "left":
+//         return (
+//           <path
+//             d={`
+//               M ${width} ${height * 0.42}
+//               L ${width + pointerSize} ${height * 0.50}
+//               L ${width} ${height * 0.58}
+//               Z
+//             `}
+//             fill={background}
+//             stroke={border}
+//             strokeWidth="1"
+//             strokeLinejoin="round"
+//           />
+//         );
+
+//       case "top":
+//         return (
+//           <path
+//             d={`
+//               M ${width * 0.45} ${height}
+//               L ${width * 0.50} ${height + pointerSize}
+//               L ${width * 0.55} ${height}
+//               Z
+//             `}
+//             fill={background}
+//             stroke={border}
+//             strokeWidth="1"
+//             strokeLinejoin="round"
+//           />
+//         );
+
+//       case "bottom":
+//         return (
+//           <path
+//             d={`
+//               M ${width * 0.45} 0
+//               L ${width * 0.50} ${-pointerSize}
+//               L ${width * 0.55} 0
+//               Z
+//             `}
+//             fill={background}
+//             stroke={border}
+//             strokeWidth="1"
+//             strokeLinejoin="round"
+//           />
+//         );
+
+//       case "right":
+//       default:
+//         return (
+//           <path
+//             d={`
+//               M 0 ${height * 0.42}
+//               L ${-pointerSize} ${height * 0.50}
+//               L 0 ${height * 0.58}
+//               Z
+//             `}
+//             fill={background}
+//             stroke={border}
+//             strokeWidth="1"
+//             strokeLinejoin="round"
+//           />
+//         );
+//     }
+//   };
+
+//   return (
+//     <g
+//       transform={tooltipTransform}
+//       pointerEvents="none"
+//     >
+//       {/* Pointer */}
+//       {pointer()}
+
+//       {/* Tooltip background */}
+//       <rect
+//         x="0"
+//         y="0"
+//         width={width}
+//         height={height}
+//         rx={Math.min(8, width * 0.05)}
+//         fill={background}
+//         stroke={border}
+//         strokeWidth="1"
+//       />
+
+//       {/* Header */}
+//       <text
+//         x={padding}
+//         y={height * 0.20}
+//         fontSize={titleSize}
+//         fontWeight="600"
+//         fill={textColor}
+//         dominantBaseline="middle"
+//       >
+//         Seat {seat.number}
+//       </text>
+
+//       {/* Divider */}
+//       <line
+//         x1={padding}
+//         y1={dividerY}
+//         x2={width - padding}
+//         y2={dividerY}
+//         stroke={border}
+//         strokeWidth="1"
+//       />
+
+//       {/* Category */}
+//       <text
+//         x={padding}
+//         y={row1Y}
+//         fontSize={textSize}
+//         fill={secondaryColor}
+//         dominantBaseline="middle"
+//       >
+//         {seat.category}
+//       </text>
+
+//       {/* Price */}
+//       <text
+//         x={width - padding}
+//         y={row1Y}
+//         fontSize={textSize}
+//         fontWeight="600"
+//         fill={accentColor}
+//         textAnchor="end"
+//         dominantBaseline="middle"
+//       >
+//         {seat.price}
+//       </text>
+
+//       {/* Status dot */}
+//       <circle
+//         cx={padding + 3}
+//         cy={row2Y}
+//         r={Math.max(2, width * 0.018)}
+//         fill={statusColor}
+//       />
+
+//       {/* Status */}
+//       <text
+//         x={padding + 10}
+//         y={row2Y}
+//         fontSize={textSize}
+//         fill={secondaryColor}
+//         dominantBaseline="middle"
+//       >
+//         {seat.status}
+//       </text>
+//     </g>
+//   );
+// }
+
+// export default SeatTooltip;

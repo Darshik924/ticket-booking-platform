@@ -7,7 +7,9 @@ import {
   CalendarDays,
   ShieldCheck,
   House,
+  ArrowRightIcon
 } from 'lucide-react'
+import axios from 'axios'
 
 function UserDisplay() {
   const [seatLayout, setseatLayout] = useState({})
@@ -19,6 +21,7 @@ function UserDisplay() {
     y: 0,
     scale: 1,
   })
+  const [eventDetails, setEventDetails] = useState(null)
   const [GridMouseDown, setGridMouseDown] = useState(false)
 
   const sceneRef = useRef(null)
@@ -27,7 +30,7 @@ function UserDisplay() {
 
   const width =
     typeof window !== 'undefined'
-      ? Math.max(window.innerHeight * 0.75, 350)
+      ? Math.max(window.innerHeight * 0.80, 350)
       : 560
 
   useEffect(() => {
@@ -59,7 +62,22 @@ function UserDisplay() {
   }, [])
 
   useEffect(() => {
-    setseatLayout(layout)
+    // setseatLayout(layout)
+    axios.get('http://localhost:5000/api/events/16')
+      .then((response) => {
+        axios.get(`http://localhost:5000/api/events/venue/${response.data.event.venueId}`)
+          .then((venueResponse) => {
+            setEventDetails({ ...response.data.event, ...venueResponse.data.venue })
+            setseatLayout(response.data.event.seatLayout)
+            console.log({ ...response.data.event, ...venueResponse.data.venue })
+          })
+          .catch((error) => {
+            console.error(error)
+          })
+      })
+      .catch((error) => {
+        console.error(error)
+      })
   }, [])
 
   const handleSectionClick = (
@@ -235,7 +253,7 @@ function UserDisplay() {
                   </span>
                 </div>
                 <div className="mt-0.5 truncate text-[10px] font-bold tracking-[-0.025em] text-[#111827] sm:text-[20px]">
-                  Event Name
+                  {eventDetails?.title ?? 'Event Title'}
                 </div>
                 <div className="mt-1 flex items-center gap-2">
                   <div className="flex min-w-0 items-center gap-1.5">
@@ -245,7 +263,7 @@ function UserDisplay() {
                       className="shrink-0 text-[#6366F1]"
                     />
                     <span className="max-w-[130px] truncate text-[10px] font-medium text-[#64748B] sm:max-w-[220px] sm:text-[11px]">
-                      Venue Name
+                      {`${eventDetails?.name} ${eventDetails?.city}` ?? 'Venue Name'}
                     </span>
                   </div>
                   <span className="text-[#CBD5E1]">•</span>
@@ -256,7 +274,7 @@ function UserDisplay() {
                       className="text-[#6366F1]"
                     />
                     <span className="whitespace-nowrap text-[10px] font-medium text-[#64748B] sm:text-[11px]">
-                      Start Date
+                      {`${eventDetails?.startDate?.split('T')[0]} ${eventDetails?.startDate?.split('T')[1].split(':')[1]}:${(eventDetails?.startDate?.split('T')[1].split(':')[2].split('.')[0])}` ?? 'Start Date'}
                     </span>
                   </div>
                 </div>
@@ -374,10 +392,80 @@ function UserDisplay() {
                           section_key.startsWith(
                             'displayOnly'
                           )
+
+                        if (displayOnly) {
+                          return (
+                            <Fragment
+                              key={section_key}
+                            >
+                              <g>
+                                <path
+                                  d={d}
+                                  stroke="none"
+                                  fill={color}
+                                  fillOpacity={0.4}
+                                />
+                                <text
+                                  x={textX}
+                                  y={textY}
+                                  textAnchor="middle"
+                                  pointerEvents="none"
+                                  dominantBaseline="central"
+                                  fontSize={font}
+                                  transform={`rotate(${rotationAngle},${textX},${textY})`}
+                                  fill="white"
+                                  opacity={1}
+                                >
+                                  {text}
+                                </text>
+                              </g>
+
+                            </Fragment>
+                          )
+                        } else {
+                          return null
+                        }
+                      }
+                    )}
+                </g>
+                <g onClick={handleSeatClick}>
+                  {seatLayout &&
+                    Object.entries(
+                      seatLayout
+                    ).map(
+                      ([
+                        section_key,
+                        section_val,
+                      ]) => {
+                        const d = section_val?.d
+                        const rotationAngle =
+                          section_val?.textAngle
+                            ? section_val.textAngle
+                            : 0
+                        const text =
+                          section_val?.name
+                            ? section_val.name
+                            : ''
+                        const color =
+                          section_val?.color
+                            ? section_val.color
+                            : 'pink'
+                        const font =
+                          section_val?.textFont
+                            ? section_val.textFont
+                            : 10
+                        const textX =
+                          section_val?.textX
+                        const textY =
+                          section_val?.textY
+                        const displayOnly =
+                          section_key.startsWith(
+                            'displayOnly'
+                          )
                         const radius = !displayOnly
                           ? Object.entries(
-                              section_val?.seats
-                            )[0][1].seatRadius
+                            section_val?.seats
+                          )[0][1].seatRadius
                           : 1
                         const scaleThreshold =
                           4 / radius || 1
@@ -394,22 +482,22 @@ function UserDisplay() {
 
                         if (
                           transform.scale >
-                            opacityThreshold &&
+                          opacityThreshold &&
                           !displayOnly
                         ) {
                           const x =
                             (transform.x * -1) /
-                              transform.scale +
+                            transform.scale +
                             width /
-                              (transform.scale)
+                            (transform.scale)
                           const y =
                             (transform.y * -1) /
-                              transform.scale +
+                            transform.scale +
                             width /
-                              (transform.scale)
+                            (transform.scale)
                           const threshold =
                             width /
-                              transform.scale +
+                            transform.scale +
                             width / 10
 
                           let minX = width
@@ -496,181 +584,154 @@ function UserDisplay() {
                           }
                         }
 
-                        return (
-                          <Fragment
-                            key={section_key}
-                          >
-                            <g
-                              onClick={(e) => {
-                                handleSectionClick(
-                                  e,
-                                  textX,
-                                  textY,
-                                  scaleThreshold
-                                )
-                              }}
-                              className={
-                                !displayOnly
-                                  ? 'cursor-pointer'
-                                  : ''
-                              }
-                              onMouseEnter={() => {
-                                setHoveredSection(
-                                  section_key
-                                )
-                              }}
-                              onMouseLeave={() => {
-                                setHoveredSection(
-                                  null
-                                )
-                              }}
+                        if (!displayOnly) {
+                          return (
+                            <Fragment
+                              key={section_key}
                             >
-                              <path
-                                d={d}
-                                stroke="none"
-                                fill={color}
-                                fillOpacity={
-                                  displayOnly
-                                    ? 0.4
-                                    : 1 -
+                              <g
+                                onClick={(e) => {
+                                  handleSectionClick(
+                                    e,
+                                    textX,
+                                    textY,
+                                    scaleThreshold
+                                  )
+                                }}
+                                className={
+                                  !displayOnly
+                                    ? 'cursor-pointer'
+                                    : ''
+                                }
+                                onMouseEnter={() => {
+                                  setHoveredSection(
+                                    section_key
+                                  )
+                                }}
+                                onMouseLeave={() => {
+                                  setHoveredSection(
+                                    null
+                                  )
+                                }}
+                              >
+                                <path
+                                  d={d}
+                                  stroke="none"
+                                  fill={color}
+                                  fillOpacity={
+                                    displayOnly
+                                      ? 0.4
+                                      : 1 -
                                       opacity +
                                       0.2
-                                }
-                              />
-                              <text
-                                x={textX}
-                                y={textY}
-                                textAnchor="middle"
-                                pointerEvents="none"
-                                dominantBaseline="central"
-                                fontSize={font}
-                                transform={`rotate(${rotationAngle},${textX},${textY})`}
-                                fill="white"
-                                opacity={
-                                  1 - opacity + 0.2
-                                }
-                              >
-                                {text}
-                              </text>
-                            </g>
+                                  }
+                                />
+                                <text
+                                  x={textX}
+                                  y={textY}
+                                  textAnchor="middle"
+                                  pointerEvents="none"
+                                  dominantBaseline="central"
+                                  fontSize={font}
+                                  transform={`rotate(${rotationAngle},${textX},${textY})`}
+                                  fill="white"
+                                  opacity={
+                                    1 - opacity + 0.2
+                                  }
+                                >
+                                  {text}
+                                </text>
+                              </g>
 
-                            {displayseats &&
-                              !displayOnly && (
-                                <Fragment>
-                                  {Object.entries(
-                                    section_val?.seats
-                                  ).map(
-                                    ([
-                                      layout_key,
-                                      layout_val,
-                                    ]) => {
-                                      return (
-                                        <g
-                                          key={
-                                            layout_key
-                                          }
-                                          transform={`translate(${layout_val.groupX},${layout_val.groupY}) rotate(${layout_val.angle})`}
-                                          style={{
-                                            cursor:
-                                              'pointer',
-                                          }}
-                                        >
-                                          {Object.entries(
-                                            layout_val.seat_data
-                                          ).map(
-                                            ([
-                                              seat_key,
-                                              seat_val,
-                                            ]) => {
-                                              const seatDetail =
-                                                JSON.stringify(
-                                                  {
-                                                    seatKey:
-                                                      seat_key,
-                                                    sectionKey:
-                                                      section_key,
-                                                    layoutKey:
-                                                      layout_key,
-                                                  }
-                                                )
-                                              const isSelected =
-                                                selectedSeat
-                                                  ? selectedSeat.includes(
-                                                      seatDetail
-                                                    )
-                                                  : false
-                                              const isHovered =
-                                                hoveredSeat
-                                                  ? seatDetail ===
-                                                    hoveredSeat
-                                                  : false
-
-                                              let fillColor
-
-                                              if (
-                                                isSelected
-                                              ) {
-                                                fillColor =
-                                                  '#1DB954'
-                                              } else if (
-                                                isHovered
-                                              ) {
-                                                fillColor =
-                                                  '#FFAC1C'
-                                              } else {
-                                                fillColor =
-                                                  '#1890ff'
-                                              }
-
-                                              return (
-                                                <g
-                                                  key={
-                                                    seat_key
-                                                  }
-                                                  onMouseEnter={
-                                                    handleSeatHover
-                                                  }
-                                                  onMouseLeave={() => {
-                                                    setHoveredSeat(
-                                                      null
-                                                    )
-                                                  }}
-                                                >
-                                                  <circle
-                                                    cx={
-                                                      seat_val.x
-                                                    }
-                                                    cy={
-                                                      seat_val.y
-                                                    }
-                                                    r={
-                                                      layout_val.seatRadius
-                                                    }
-                                                    fill={
-                                                      fillColor
-                                                    }
-                                                    strokeWidth={
-                                                      0
-                                                    }
-                                                    opacity={
-                                                      opacity
-                                                    }
-                                                    data-key={
-                                                      seatDetail
-                                                    }
-                                                  />
-                                                </g>
-                                              )
+                              {displayseats &&
+                                !displayOnly && (
+                                  <Fragment>
+                                    {Object.entries(
+                                      section_val?.seats
+                                    ).map(
+                                      ([
+                                        layout_key,
+                                        layout_val,
+                                      ]) => {
+                                        return (
+                                          <g
+                                            key={
+                                              layout_key
                                             }
-                                          )}
-                                        </g>
-                                      )
-                                    }
-                                  )}
-                                </Fragment>
-                              )}
-                          </Fragment>
-                        )
+                                            transform={`translate(${layout_val.groupX},${layout_val.groupY}) rotate(${layout_val.angle})`}
+                                            style={{
+                                              cursor:
+                                                'pointer',
+                                            }}
+                                          >
+                                            {Object.entries(
+                                              layout_val.seat_data
+                                            ).map(
+                                              ([
+                                                seat_key,
+                                                seat_val,
+                                              ]) => {
+                                                const seatDetail =
+                                                  JSON.stringify(
+                                                    {
+                                                      seatKey:
+                                                        seat_key,
+                                                      sectionKey:
+                                                        section_key,
+                                                      layoutKey:
+                                                        layout_key,
+                                                    }
+                                                  )
+                                                const isSelected = selectedSeat ? selectedSeat.includes( seatDetail ) : false
+                                                const isHovered = hoveredSeat ? seatDetail === hoveredSeat : false
+
+                                                let fillColor;
+
+                                                if ( isSelected ) {
+                                                  fillColor = '#1DB954'
+                                                } else if ( isHovered ) {
+                                                  fillColor = '#FFAC1C'
+                                                } else {
+                                                  fillColor = '#1890ff'
+                                                }
+
+                                                return (
+                                                  <Fragment>
+                                                    <g
+                                                      key={seat_key}
+                                                      onMouseEnter={
+                                                        handleSeatHover
+                                                      }
+                                                      onMouseLeave={() => {
+                                                        setHoveredSeat(
+                                                          null
+                                                        )
+                                                      }}
+                                                    >
+                                                      <circle
+                                                        cx={ seat_val.x }
+                                                        cy={ seat_val.y }
+                                                        r={ layout_val.seatRadius }
+                                                        fill={ fillColor }
+                                                        strokeWidth={ 0 }
+                                                        opacity={ opacity }
+                                                        data-key={ seatDetail }
+                                                      />
+                                                    </g>
+
+                                                  </Fragment>
+                                                )
+                                              }
+                                            )}
+                                          </g>
+                                        )
+                                      }
+                                    )}
+                                  </Fragment>
+                                )}
+                            </Fragment>
+                          )
+                        } else return null
                       }
                     )}
                 </g>
@@ -862,7 +923,7 @@ function UserDisplay() {
             )}
           </div>
 
-          <div className="shrink-0 border-t border-[#E8EAF0] bg-white px-5 pb-5 pt-4 sm:px-6">
+          <div className="shrink-0 border-t h-[30vh] border-[#E8EAF0] bg-white px-5 pb-5 pt-4 sm:px-6">
             <div className="space-y-2.5">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-[#7B8494]">Tickets</span>
@@ -920,7 +981,7 @@ function UserDisplay() {
               </span>
               {selectedSeat.length > 0 && (
                 <span className="relative ml-2 text-base transition-transform duration-200 group-hover:translate-x-1">
-                  →
+                  <ArrowRightIcon size={20} />
                 </span>
               )}
             </button>
