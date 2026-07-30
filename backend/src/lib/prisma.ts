@@ -1,4 +1,6 @@
 import { Prisma, PrismaClient } from "../generated/prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
 
 if (!process.env.DATABASE_URL) {
     throw new Error("ERROR: DATABASE_URL is not defined in your environment variables!");

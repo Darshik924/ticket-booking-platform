@@ -20,3 +20,22 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: admin123
     depends_on:
       - prometheus
+
+  db:
+    image: postgres
+    container_name: db
+    environment:
+      POSTGRES_USER: ticket_booking
+      POSTGRES_PASSWORD: postgres123
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - .data/db_data:/var/lib/postgresql/data  
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "8080:8080"
+    
