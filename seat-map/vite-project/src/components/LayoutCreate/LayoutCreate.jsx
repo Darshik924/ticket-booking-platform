@@ -1340,7 +1340,7 @@ function LayoutCreate({ setDisplayLayout, formData, venueDetail }) {
                                 <label htmlFor={`radius:${idx}`}>{`Radius: Arc-${j} `}</label>
                                 <input type="number" id={`radius:${idx}}`} min={1} max={1000} className='border border-amber-100 ml-0.5 rounded pl-0.5' defaultValue={point.radius} onChange={(e) => {
                                   let new_polyPoints = { ...seatLayout }
-                                  new_polyPoints[key].points[point_key].radius = e.target.value
+                                  new_polyPoints[key].points[point_key].radius = Number(e.target.value)
 
                                   let d = `M${new_polyPoints[key].points.point1.x} ${new_polyPoints[key].points.point1.y}`
 
@@ -1448,16 +1448,14 @@ function LayoutCreate({ setDisplayLayout, formData, venueDetail }) {
                             }} />
                           </Fragment>
 
-                          {element.price && (
-                            <div>
-                              <label htmlFor={`section${key}price`}>Enter Section Price (₹)</label>
-                              <input type="number" min={0} id={`section${key}price`} defaultValue={Number(element.price)} onChange={(e) => {
-                                let layout = { ...seatLayout }
-                                layout[key].price = (e.target.value)
-                                setseatLayout(layout)
-                              }} className='border border-white rounded m-1 pl-1' />
-                            </div>
-                          )}
+                          <div>
+                            <label htmlFor={`section${key}price`}>Enter Section Price (₹)</label>
+                            <input type="number" min={0} id={`section${key}price`} defaultValue={Number(element.price)} onChange={(e) => {
+                              let layout = { ...seatLayout }
+                              layout[key].price = (e.target.value)
+                              setseatLayout(layout)
+                            }} className='border border-white rounded m-1 pl-1' />
+                          </div>
 
                           <div>
                             <label htmlFor={`section${key}color`}>Enter Section Color</label>
@@ -1545,7 +1543,7 @@ function LayoutCreate({ setDisplayLayout, formData, venueDetail }) {
                       }} >Generate Seat Layout</button>
 
                       {Object.entries(seatLayout[key].seats).length > 0 && (
-                        <Fragment>
+                        <Fragment key={key}>
                           <div className='grid grid-cols-2 justify-items-center w-125'>
                             {
                               Object.entries(seatLayout[key].seats).map(([layout_key, layout]) => {
@@ -1560,7 +1558,7 @@ function LayoutCreate({ setDisplayLayout, formData, venueDetail }) {
                                     <div className='w-fit underline m-1 mt-0'>{`Seat Layout - ${idx}`}</div>
                                     <div className='w-fit'>
                                       <label htmlFor={`seatRadius${layout_key}`} className='m-1'>Seat Radius</label>
-                                      <input type="number" min={0.1} max={50} defaultValue={layout.seatRadius} step={0.1} className='border border-white rounded m-1 pl-1' id={`seatRadius${layout_key}`} onChange={(e) => {
+                                      <input type="number" min={0.1} max={50} value={layout.seatRadius} step={0.1} className='border border-white rounded m-1 pl-1' id={`seatRadius${layout_key}`} onChange={(e) => {
                                         let newSectionName = { ...seatLayout }
                                         newSectionName[key].seats[layout_key].seatRadius = Number(e.target.value)
                                         layoutGenerate(layout_key, key, newSectionName)
@@ -1570,7 +1568,7 @@ function LayoutCreate({ setDisplayLayout, formData, venueDetail }) {
 
                                     <div className='w-fit'>
                                       <label htmlFor={`rowGap${layout_key}`} className='m-1'>Row Gap</label>
-                                      <input type="number" min={0.1} max={50} step={0.1} defaultValue={layout.rowGap} className='border border-white rounded m-1 pl-1' id={`rowGap${layout_key}`} onChange={(e) => {
+                                      <input type="number" min={0.1} max={50} step={0.1} value={layout.rowGap} className='border border-white rounded m-1 pl-1' id={`rowGap${layout_key}`} onChange={(e) => {
                                         let newSectionName = { ...seatLayout }
                                         newSectionName[key].seats[layout_key].rowGap = Number(e.target.value)
                                         layoutGenerate(layout_key, key, newSectionName)
@@ -1580,7 +1578,7 @@ function LayoutCreate({ setDisplayLayout, formData, venueDetail }) {
 
                                     <div className='w-fit'>
                                       <label htmlFor={`colGap${layout_key}`} className='m-1'>Column Gap</label>
-                                      <input type="number" min={0.1} max={50} step={0.1} defaultValue={layout.colGap} className='border border-white rounded m-1 pl-1' id={`colGap${layout_key}`} onChange={(e) => {
+                                      <input type="number" min={0.1} max={50} step={0.1} value={layout.colGap} className='border border-white rounded m-1 pl-1' id={`colGap${layout_key}`} onChange={(e) => {
                                         let newSectionName = { ...seatLayout }
                                         newSectionName[key].seats[layout_key].colGap = Number(e.target.value)
                                         layoutGenerate(layout_key, key, newSectionName)
@@ -1590,7 +1588,7 @@ function LayoutCreate({ setDisplayLayout, formData, venueDetail }) {
 
                                     <div className='w-fit'>
                                       <label htmlFor={`seatLayoutAngle${layout_key}`} className='m-1'>Layout Angle</label>
-                                      <input type="number" min={-180} max={180} defaultValue={layout.angle} className='border border-white rounded m-1 pl-1' id={`seatLayoutAngle${layout_key}`} onChange={(e) => {
+                                      <input type="number" min={-180} max={180} value={layout.angle} className='border border-white rounded m-1 pl-1' id={`seatLayoutAngle${layout_key}`} onChange={(e) => {
                                         let newSectionName = { ...seatLayout }
                                         newSectionName[key].seats[layout_key].angle = Number(e.target.value)
                                         setseatLayout(newSectionName)
@@ -1618,7 +1616,7 @@ function LayoutCreate({ setDisplayLayout, formData, venueDetail }) {
                                     {(layout.type === 'arc' || layout.type === 'arcFixed') && (
                                       <div className='w-fit'>
                                         <label htmlFor={`layoutRadius${layout_key}`} className='m-1'>Arc Radius</label>
-                                        <input type="number" min={1} max={1000} defaultValue={layout.layoutRadius} className='border border-white rounded m-1 pl-1' id={`layoutRadius${layout_key}`} onChange={(e) => {
+                                        <input type="number" min={1} max={1000} value={layout.layoutRadius} className='border border-white rounded m-1 pl-1' id={`layoutRadius${layout_key}`} onChange={(e) => {
                                           let newSectionName = { ...seatLayout }
                                           newSectionName[key].seats[layout_key].layoutRadius = Number(e.target.value)
                                           layoutGenerate(layout_key, key, newSectionName)
@@ -1628,11 +1626,27 @@ function LayoutCreate({ setDisplayLayout, formData, venueDetail }) {
                                     )}
                                     <button className=' bg-[#7f1313] rounded pl-1 pr-1 m-1 cursor-pointer' onClick={() => {
                                       let newSectionName = { ...seatLayout }
-                                      delete newSectionName[key].seats[layout_key]
+                                      let x = -1
+                                      if (Object.entries(seatLayout[key].seats).at(-1)[0] === layout_key) {
+                                        delete newSectionName[key].seats[layout_key]
+                                      }
+                                      Object.entries(seatLayout[key].seats).map(([newLayout_key, layout_val], idx) => {
+                                        if (newLayout_key === layout_key) {
+                                          x = idx
+                                        }
+                                        if (x != -1 && idx > x) {
+                                          const match = layout_key.match(/\d+/);
+                                          let j;
+                                          if (match) {
+                                            j = parseInt(match[0], 10);
+                                          }
+                                          newSectionName[key].seats[`layout${j + idx - x - 1}`] = newSectionName[key].seats[newLayout_key]
+                                          delete newSectionName[key].seats[newLayout_key]
+                                        }
+                                      })
                                       console.log(newSectionName)
                                       setseatLayout(newSectionName)
                                       setEditingSeat(null)
-                                      setSelectDeleteSeats([])
                                     }}>Delete Layout</button>
 
                                   </div>
@@ -1795,7 +1809,7 @@ function LayoutCreate({ setDisplayLayout, formData, venueDetail }) {
                     let textX = section_val?.textX
                     let textY = section_val?.textY
                     let displayOnly = section_key.startsWith('displayOnly')
-                    let radius = !displayOnly ? Object.entries(section_val?.seats)[0][1].seatRadius : 1
+                    let radius = !displayOnly ? (Object.entries(section_val?.seats)[0] ? Object.entries(section_val?.seats)[0][1].seatRadius : 1) : 1
                     const scaleThreshold = 4 / radius || 1
                     const opacityThreshold = 2 / radius || 1
                     let isHovered = hoveredSection === section_key
@@ -1961,7 +1975,9 @@ function LayoutCreate({ setDisplayLayout, formData, venueDetail }) {
                                     setLayoutClicked(false)
                                   }}
                                 >
-                                  <rect x={-1} y={-1} width={type === 'linear' ? ((colGap + 2 * seatRadius) * columns + 5) : arcwidth} height={type === 'linear' ? (rowGap + 2 * seatRadius) * rows + 5 : archeight} fill="transparent" />
+                                  {(editingSectionSeat?.some(seat => seat.sectionKey === section_key)) && (
+                                    <rect key={section_key} x={-1} y={-1} width={type === 'linear' ? ((colGap + 2 * seatRadius) * columns + 5) : arcwidth} height={type === 'linear' ? (rowGap + 2 * seatRadius) * rows + 5 : archeight} fill="transparent" />
+                                  )}
                                   {Object.entries(layout_val.seat_data).map(([seat_key, seat_val]) => {
 
                                     const seatDetail = { seatKey: seat_key, sectionKey: section_key, layoutKey: layout_key }

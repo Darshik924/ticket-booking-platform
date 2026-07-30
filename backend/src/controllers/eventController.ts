@@ -133,6 +133,8 @@ const getEvent = async (req: Request, res: Response) => {
   res.status(200).json({ event });
 };
 
+
+
 // GET /api/events/venue/:venueId - a single venue details
 const getVenue = async (req: Request, res: Response) => {
   const { venueId } = req.params;
@@ -192,7 +194,7 @@ const createAnEvent = async (req: Request, res: Response) => {
           tag: eventData.tag,
           category: eventData.category,
           startDate: new Date(eventData.startDate),
-          endDate: new Date(eventData.endDate),
+          endDate: eventData.endDate ? new Date(eventData.endDate) : null,
           duration: eventData.duration,
           venueId: venue.id,
           seatLayout: eventData.seatLayout,
@@ -209,7 +211,7 @@ const createAnEvent = async (req: Request, res: Response) => {
           tag: eventData.tag,
           category: eventData.category,
           startDate: new Date(eventData.startDate),
-          endDate: new Date(eventData.endDate),
+          endDate: eventData.endDate ? new Date(eventData.endDate) : null,
           duration: eventData.duration,
           venueId: eventData.venueId,
           seatLayout: eventData.seatLayout,
@@ -273,84 +275,81 @@ const createVenue = async (req: Request, res: Response) => {
 
 }
 
-// // PUT api/events/:eventId
+// PUT api/events/
 const updateAnEvent = async (req: Request, res: Response) => {
-  const { eventId } = req.params;
 
-  const parsed = createEventSchema.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.flatten() });
-    console.log(parsed)
-    return;
-  }
-
-  const event = parsed.data;
-  const newId = getIntegerId(eventId);
-  // const newId = +eventId;
+  const { event } = req.body
+  const newId = getIntegerId(event.id);
+  console.log(event)
 
   if (isNaN(newId)) {
     return res.status(400).json({ error: "Invalid event ID format" });
   }
 
-  // try {
-  //   // We use a transaction to ensure everything updates successfully together
-  //   const updatedEvent = await prisma.$transaction(async (tx: any) => {
-  //     // 1. If totalSeats is being updated, we handle the seat recreation
-  //     if (totalSeats !== undefined) {
-  //       // Delete existing seats first
-  //       await tx.seat.deleteMany({
-  //         where: { eventId: newId },
-  //       });
-  //     }
+  try {
+    if (!event.venueId) {
+      const venue = await prisma.venue.create(
+        {
+          data: {
+            name: event.venueName as string,
+            address: event.venueAddress as string,
+            country: event.venueCountry as string,
+            city: event.venueCity as string,
+            pincode: event.venuePincode as string,
+            state: event.venueState as string,
+            seatLayout: event.seatLayout
+          },
+          select: {
+            id: true
+          }
+        }
+      )
+      const updatedEvent = await prisma.event.update({
+        where: {
+          id: newId
+        },
+        data: {
+          title: event.title,
+          ageLimit: event.ageLimit,
+          description: event.description,
+          tag: event.tag,
+          category: event.category,
+          startDate: new Date(event.startDate),
+          endDate: event.endDate ? new Date(event.endDate) : null,
+          duration: event.duration,
+          venueId: venue.id,
+          seatLayout: event.seatLayout,
+        },
+      });
 
-  //     const event = await tx.event.update({
-  //       where: { id: newId },
-  //       data: {
-  //         ...(name && { name }),
-  //         ...(venue && { venue }),
-  //         ...(imageUrl && { imageUrl }),
-  //         ...(date && { date: new Date(date) }),
-  //         ...(totalSeats !== undefined && {
-  //           totalSeats,
-  //           seats: {
-  //             create: Array.from({ length: totalSeats }, (_, i) => ({
-  //               seatNumber: `A${i + 1}`,
-  //             })),
-  //           },
-  //         }),
-  //       },
-  //       include: { _count: { select: { seats: true } } },
-  //     });
+      res.status(201).json({ event: updatedEvent });
+    } else {
+      const updatedEvent = await prisma.event.update({
+        where: {
+          id: newId
+        },
+        data: {
+          title: event.title,
+          ageLimit: event.ageLimit,
+          description: event.description,
+          tag: event.tag,
+          category: event.category,
+          startDate: new Date(event.startDate),
+          endDate: event.endDate ? new Date(event.endDate) : null,
+          duration: event.duration,
+          venueId: event.venueId,
+          seatLayout: event.seatLayout,
+        },
+      });
 
-  //     return event;
-  //   });
+      res.status(201).json({ event: updatedEvent });
+    }
 
-  //   // If totalSeats was updated, sync with Redis cache
-  //   if (totalSeats !== undefined) {
-  //     const hashKey = REDIS_KEYS.eventSeats(newId);
-  //     await redisClient.del(hashKey);
-
-  //     const seats = await prisma.seat.findMany({
-  //       where: { eventId: newId },
-  //       orderBy: { seatNumber: "asc" },
-  //     });
-
-  //     const pipeline = redisClient.pipeline();
-  //     seats.forEach((seat: any) => {
-  //       pipeline.hset(
-  //         hashKey,
-  //         String(seat.id),
-  //         `${seat.seatNumber}:${seat.status}`,
-  //       );
-  //     });
-  //     await pipeline.exec();
-  //   }
-
-  //   res.status(200).json({ event: updatedEvent });
-  // } catch (error) {
-  //   // Handle cases where the event ID doesn't exist
-  //   res.status(404).json({ error: "Event not found or failed to update" });
-  // }
+  } catch (error) {
+    // Handle cases where the event ID doesn't exist
+    console.log(error)
+    res.status(404).json({ error: "Event not found or failed to update" });
+  }
 };
 
 const updateVenue = async (req: Request, res: Response) => {

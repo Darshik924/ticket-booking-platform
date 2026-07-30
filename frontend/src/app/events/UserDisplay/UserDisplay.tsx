@@ -86,7 +86,7 @@ function UserDisplay() {
 
   const width =
     typeof window !== 'undefined'
-      ? Math.max(window.innerHeight * 0.7, 350)
+      ? Math.max(window.innerHeight * 0., 350)
       : 560
 
   useEffect(() => {
@@ -167,7 +167,7 @@ function UserDisplay() {
       return
     }
 
-    const seatDetail = seat.dataset.key
+    const seatDetail = seat.dataset.key as string
 
     if (hoveredSeat !== seatDetail) {
       setHoveredSeat(seatDetail)
@@ -180,7 +180,7 @@ function UserDisplay() {
 
     if (!seat) return
 
-    const seatDetail = seat.dataset.key
+    const seatDetail = seat.dataset.key as string
 
     if (selectedSeat.includes(seatDetail)) {
       const newSelectedSeat = [...selectedSeat]
@@ -404,142 +404,92 @@ function UserDisplay() {
               >
                 <g onClick={handleSeatClick}>
                   {seatLayout &&
-                    Object.entries(
-                      seatLayout
-                    ).map(
-                      ([
-                        section_key,
-                        section_val,
-                      ]) => {
-                        const d = section_val?.d
-                        const rotationAngle =
-                          section_val?.textAngle
-                            ? section_val.textAngle
-                            : 0
-                        const text =
-                          section_val?.name
-                            ? section_val.name
-                            : ''
-                        const color =
-                          section_val?.color
-                            ? section_val.color
-                            : 'pink'
-                        const font =
-                          section_val?.textFont
-                            ? section_val.textFont
-                            : 10
-                        const textX =
-                          section_val?.textX
-                        const textY =
-                          section_val?.textY
-                        const displayOnly =
-                          section_key.startsWith(
-                            'displayOnly'
-                          )
-                        const radius = !displayOnly
-                          ? Object.entries(
-                              section_val?.seats
-                            )[0][1].seatRadius
-                          : 1
-                        const scaleThreshold =
-                          4 / radius || 1
-                        const opacityThreshold =
-                          2 / radius || 1
-                        const isHovered =
-                          hoveredSection ===
-                          section_key
-
-                        let opacity = isHovered
-                          ? 0.5
+                    Object.entries(seatLayout).map(([section_key, section_val,]) => {
+                      const d = section_val?.d
+                      const rotationAngle =
+                        section_val?.textAngle
+                          ? section_val.textAngle
                           : 0
-                        let displayseats = false
+                      const text =
+                        section_val?.name
+                          ? section_val.name
+                          : ''
+                      const color =
+                        section_val?.color
+                          ? section_val.color
+                          : 'pink'
+                      const font =
+                        section_val?.textFont
+                          ? section_val.textFont
+                          : 10
+                      const textX =
+                        section_val?.textX
+                      const textY =
+                        section_val?.textY
+                      const displayOnly =
+                        section_key.startsWith(
+                          'displayOnly'
+                        )
+                      const radius = !displayOnly
+                        ? Object.entries(
+                          section_val?.seats
+                        )[0][1].seatRadius
+                        : 1
+                      const scaleThreshold =
+                        4 / (radius as number) || 1
+                      const opacityThreshold =
+                        2 / (radius as number) || 1
+                      const isHovered =
+                        hoveredSection ===
+                        section_key
 
-                        if (
-                          transform.scale >
-                            opacityThreshold &&
-                          !displayOnly
-                        ) {
-                          const x =
-                            (transform.x * -1) /
-                              transform.scale +
-                            width /
-                              (transform.scale)
-                          const y =
-                            (transform.y * -1) /
-                              transform.scale +
-                            width /
-                              (transform.scale)
-                          const threshold =
-                            width /
-                              transform.scale +
-                            width / 10
+                      let opacity = isHovered
+                        ? 0.5
+                        : 0
+                      let displayseats = false
 
-                          let minX = width
-                          let maxX = 0
-                          let minY = width
-                          let maxY = 0
+                      if (
+                        transform.scale >
+                        opacityThreshold &&
+                        !displayOnly
+                      ) {
+                        const x =
+                          (transform.x * -1) /
+                          transform.scale +
+                          width /
+                          (transform.scale)
+                        const y =
+                          (transform.y * -1) /
+                          transform.scale +
+                          width /
+                          (transform.scale)
+                        const threshold =
+                          width /
+                          transform.scale +
+                          width / 10
 
-                          for (const point of Object.values(
-                            section_val.points
-                          )) {
-                            const pointx =
-                              (point.x * width) /
-                              800
-                            const pointy =
-                              (point.y * width) /
-                              800
+                        let minX = width
+                        let maxX = 0
+                        let minY = width
+                        let maxY = 0
 
-                            if (
-                              Math.abs(
-                                pointx - x
-                              ) <= threshold &&
-                              Math.abs(
-                                pointy - y
-                              ) <= threshold
-                            ) {
-                              displayseats = true
-
-                              if (
-                                transform.scale >
-                                scaleThreshold
-                              ) {
-                                opacity = 1
-                              } else {
-                                opacity =
-                                  (transform.scale -
-                                    opacityThreshold) /
-                                  (scaleThreshold -
-                                    opacityThreshold)
-                              }
-                            }
-
-                            if (
-                              pointx > maxX
-                            ) {
-                              maxX = pointx
-                            }
-                            if (
-                              pointy > maxY
-                            ) {
-                              maxY = pointy
-                            }
-                            if (
-                              pointx < minX
-                            ) {
-                              minX = pointx
-                            }
-                            if (
-                              pointy < minY
-                            ) {
-                              minY = pointy
-                            }
-                          }
+                        for (const point of Object.values(
+                          section_val.points
+                        )) {
+                          const pointx =
+                            ((point.x as number) * width) /
+                            800
+                          const pointy =
+                            ((point.y as number) * width) /
+                            800
 
                           if (
-                            x > minX &&
-                            x < maxX &&
-                            y > minY &&
-                            y < maxY
+                            Math.abs(
+                              pointx - x
+                            ) <= threshold &&
+                            Math.abs(
+                              pointy - y
+                            ) <= threshold
                           ) {
                             displayseats = true
 
@@ -556,184 +506,202 @@ function UserDisplay() {
                                   opacityThreshold)
                             }
                           }
+
+                          if (
+                            pointx > maxX
+                          ) {
+                            maxX = pointx
+                          }
+                          if (
+                            pointy > maxY
+                          ) {
+                            maxY = pointy
+                          }
+                          if (
+                            pointx < minX
+                          ) {
+                            minX = pointx
+                          }
+                          if (
+                            pointy < minY
+                          ) {
+                            minY = pointy
+                          }
                         }
 
-                        return (
-                          <Fragment
-                            key={section_key}
-                          >
-                            <g
-                              onClick={(e) => {
-                                handleSectionClick(
-                                  e,
-                                  textX,
-                                  textY,
-                                  scaleThreshold
-                                )
-                              }}
-                              className={
-                                !displayOnly
-                                  ? 'cursor-pointer'
-                                  : ''
-                              }
-                              onMouseEnter={() => {
-                                setHoveredSection(
-                                  section_key
-                                )
-                              }}
-                              onMouseLeave={() => {
-                                setHoveredSection(
-                                  null
-                                )
-                              }}
-                            >
-                              <path
-                                d={d}
-                                stroke="none"
-                                fill={color}
-                                fillOpacity={
-                                  displayOnly
-                                    ? 0.4
-                                    : 1 -
-                                      opacity +
-                                      0.2
-                                }
-                              />
-                              <text
-                                x={textX}
-                                y={textY}
-                                textAnchor="middle"
-                                pointerEvents="none"
-                                dominantBaseline="central"
-                                fontSize={font}
-                                transform={`rotate(${rotationAngle},${textX},${textY})`}
-                                fill="white"
-                                opacity={
-                                  1 - opacity + 0.2
-                                }
-                              >
-                                {text}
-                              </text>
-                            </g>
+                        if (
+                          x > minX &&
+                          x < maxX &&
+                          y > minY &&
+                          y < maxY
+                        ) {
+                          displayseats = true
 
-                            {displayseats &&
-                              !displayOnly && (
-                                <Fragment>
-                                  {Object.entries(
-                                    section_val?.seats
-                                  ).map(
-                                    ([
-                                      layout_key,
-                                      layout_val,
-                                    ]) => {
-                                      return (
-                                        <g
-                                          key={
-                                            layout_key
-                                          }
-                                          transform={`translate(${layout_val.groupX},${layout_val.groupY}) rotate(${layout_val.angle})`}
-                                          style={{
-                                            cursor:
-                                              'pointer',
-                                          }}
-                                        >
-                                          {Object.entries(
-                                            layout_val.seat_data
-                                          ).map(
-                                            ([
-                                              seat_key,
-                                              seat_val,
-                                            ]) => {
-                                              const seatDetail =
-                                                JSON.stringify(
-                                                  {
-                                                    seatKey:
-                                                      seat_key,
-                                                    sectionKey:
-                                                      section_key,
-                                                    layoutKey:
-                                                      layout_key,
-                                                  }
-                                                )
-                                              const isSelected =
-                                                selectedSeat
-                                                  ? selectedSeat.includes(
-                                                      seatDetail
-                                                    )
-                                                  : false
-                                              const isHovered =
-                                                hoveredSeat
-                                                  ? seatDetail ===
-                                                    hoveredSeat
-                                                  : false
-
-                                              let fillColor
-
-                                              if (
-                                                isSelected
-                                              ) {
-                                                fillColor =
-                                                  '#1DB954'
-                                              } else if (
-                                                isHovered
-                                              ) {
-                                                fillColor =
-                                                  '#FFAC1C'
-                                              } else {
-                                                fillColor =
-                                                  '#1890ff'
-                                              }
-
-                                              return (
-                                                <g
-                                                  key={
-                                                    seat_key
-                                                  }
-                                                  onMouseEnter={
-                                                    handleSeatHover
-                                                  }
-                                                  onMouseLeave={() => {
-                                                    setHoveredSeat(
-                                                      null
-                                                    )
-                                                  }}
-                                                >
-                                                  <circle
-                                                    cx={
-                                                      seat_val.x
-                                                    }
-                                                    cy={
-                                                      seat_val.y
-                                                    }
-                                                    r={
-                                                      layout_val.seatRadius
-                                                    }
-                                                    fill={
-                                                      fillColor
-                                                    }
-                                                    strokeWidth={
-                                                      0
-                                                    }
-                                                    opacity={
-                                                      opacity
-                                                    }
-                                                    data-key={
-                                                      seatDetail
-                                                    }
-                                                  />
-                                                </g>
-                                              )
-                                            }
-                                          )}
-                                        </g>
-                                      )
-                                    }
-                                  )}
-                                </Fragment>
-                              )}
-                          </Fragment>
-                        )
+                          if (
+                            transform.scale >
+                            scaleThreshold
+                          ) {
+                            opacity = 1
+                          } else {
+                            opacity =
+                              (transform.scale -
+                                opacityThreshold) /
+                              (scaleThreshold -
+                                opacityThreshold)
+                          }
+                        }
                       }
+
+                      return (
+                        <Fragment
+                          key={section_key}
+                        >
+                          <g
+                            onClick={(e) => {
+                              handleSectionClick(
+                                e,
+                                textX as number,
+                                textY as number,
+                                scaleThreshold
+                              )
+                            }}
+                            className={
+                              !displayOnly
+                                ? 'cursor-pointer'
+                                : ''
+                            }
+                            onMouseEnter={() => {
+                              setHoveredSection(
+                                section_key
+                              )
+                            }}
+                            onMouseLeave={() => {
+                              setHoveredSection(
+                                null
+                              )
+                            }}
+                          >
+                            <path
+                              d={d}
+                              stroke="none"
+                              fill={color}
+                              fillOpacity={
+                                displayOnly
+                                  ? 0.4
+                                  : 1 -
+                                  opacity +
+                                  0.2
+                              }
+                            />
+                            <text
+                              x={textX}
+                              y={textY}
+                              textAnchor="middle"
+                              pointerEvents="none"
+                              dominantBaseline="central"
+                              fontSize={font}
+                              transform={`rotate(${rotationAngle},${textX},${textY})`}
+                              fill="white"
+                              opacity={
+                                1 - opacity + 0.2
+                              }
+                            >
+                              {text}
+                            </text>
+                          </g>
+
+                          {displayseats &&
+                            !displayOnly && (
+                              <Fragment>
+                                {Object.entries(
+                                  section_val?.seats
+                                ).map(
+                                  ([
+                                    layout_key,
+                                    layout_val,
+                                  ]) => {
+                                    return (
+                                      <g
+                                        key={
+                                          layout_key
+                                        }
+                                        transform={`translate(${layout_val.groupX},${layout_val.groupY}) rotate(${layout_val.angle})`}
+                                        style={{
+                                          cursor:
+                                            'pointer',
+                                        }}
+                                      >
+                                        {Object.entries(
+                                          layout_val.seat_data
+                                        ).map(
+                                          ([
+                                            seat_key,
+                                            seat_val,
+                                          ]) => {
+                                            const seatDetail =JSON.stringify({seatKey:seat_key,sectionKey:section_key,layoutKey:layout_key,})
+                                            const isSelected = selectedSeat ? selectedSeat.includes( seatDetail ) : false
+                                            const isHovered = hoveredSeat ? seatDetail === hoveredSeat : false
+
+                                            let fillColor;
+
+                                            if (isSelected) {
+                                              fillColor ='#1DB954'
+                                            } else if (isHovered) {
+                                              fillColor ='#FFAC1C'
+                                            } else {
+                                              fillColor ='#1890ff'
+                                            }
+
+                                            return (
+                                              <g
+                                                key={
+                                                  seat_key
+                                                }
+                                                onMouseEnter={
+                                                  handleSeatHover
+                                                }
+                                                onMouseLeave={() => {
+                                                  setHoveredSeat(
+                                                    null
+                                                  )
+                                                }}
+                                              >
+                                                <circle
+                                                  cx={
+                                                    seat_val.x
+                                                  }
+                                                  cy={
+                                                    seat_val.y
+                                                  }
+                                                  r={
+                                                    layout_val.seatRadius
+                                                  }
+                                                  fill={
+                                                    fillColor
+                                                  }
+                                                  strokeWidth={
+                                                    0
+                                                  }
+                                                  opacity={
+                                                    opacity
+                                                  }
+                                                  data-key={
+                                                    seatDetail
+                                                  }
+                                                />
+                                              </g>
+                                            )
+                                          }
+                                        )}
+                                      </g>
+                                    )
+                                  }
+                                )}
+                              </Fragment>
+                            )}
+                        </Fragment>
+                      )
+                    }
                     )}
                 </g>
               </svg>

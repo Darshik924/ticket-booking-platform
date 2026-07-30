@@ -27,7 +27,7 @@ function UserDisplay() {
 
   const width =
     typeof window !== 'undefined'
-      ? Math.max(window.innerHeight * 0.7, 350)
+      ? Math.max(window.innerHeight * 0.75, 350)
       : 560
 
   useEffect(() => {

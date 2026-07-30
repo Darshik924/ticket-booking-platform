@@ -36,7 +36,7 @@ eventRouter.get("/:eventId", getEvent);
 // These are the Admin routes which only an admin account will be able to access and perform operations as we dont want users hitting requests for changing the details for an event
 eventRouter.post("/", createAnEvent);
 eventRouter.post("/venue", createVenue);
-eventRouter.put("/:eventId", updateAnEvent);
+eventRouter.put("/", updateAnEvent);
 // eventRouter.put("/:eventId", authenticateUser, adminAuthenticate, updateAnEvent);
 eventRouter.delete("/:eventId", deleteAnEvent);
 // Date Format need to provide is 2026-06-11T14:30:00.000Z

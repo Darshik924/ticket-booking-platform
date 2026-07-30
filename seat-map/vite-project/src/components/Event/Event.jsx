@@ -106,8 +106,7 @@ function Event() {
     console.log({ ...event, ...data })
 
     try {
-      const response = await axios.delete(`http://localhost:5000/api/events/${type}`)
-      const update = await axios.post('http://localhost:5000/api/events', { ...event, ...data })
+      const update = await axios.put('http://localhost:5000/api/events', { event: { ...event, ...data } })
       alert('Event data is updated')
     } catch (error) {
       console.error(error)
@@ -119,26 +118,26 @@ function Event() {
   return (
     <>
       {(displayLayout === 'none') ? (
-        <div className='pl-1'>
+        <div className='pl-1' key={'event'}>
           <form action="post" ref={formRef} onSubmit={(e) => { e.preventDefault() }}>
             <div className='m-1'>
               <label htmlFor="title" className='m-1'>Event Title</label>
-              <input type="text" id='title' name='title' placeholder='Enter Event Title' className='pl-1 border rounded m-1' required defaultValue={(event?.title) ? event.title : ''} />
+              <input key={'title'} type="text" id='title' name='title' placeholder='Enter Event Title' className='pl-1 border rounded m-1' required defaultValue={(event?.title) ? event.title : ''} />
             </div>
 
             <div className='m-1'>
               <label htmlFor="description" className='m-1' >Event Description</label>
-              <input type="text" id='description' name='description' defaultValue={(event?.description) ? event.description : ''} placeholder='Enter Event Description' className='pl-1 border rounded m-1' />
+              <input key={'description'} type="text" id='description' name='description' defaultValue={(event?.description) ? event.description : ''} placeholder='Enter Event Description' className='pl-1 border rounded m-1' />
             </div>
 
             <div className='m-1'>
               <label htmlFor="tags" className='m-1'>Event Tags</label>
-              <input type="text" id='tags' name='tag' placeholder='e.g. Music, Sports, Comedy' className='pl-1 border rounded m-1' defaultValue={(event?.tag) ? event.tag : ''} />
+              <input key={'tags'} type="text" id='tags' name='tag' placeholder='e.g. Music, Sports, Comedy' className='pl-1 border rounded m-1' defaultValue={(event?.tag) ? event.tag : ''} />
             </div>
 
             <div className='m-1'>
               <label htmlFor="category" className='m-1'>Event Category</label>
-              <select name="category" id='category' className='pl-1 border rounded m-1' defaultValue={(event?.category) ? event.category : ''}>
+              <select key={'category'} name="category" id='category' className='pl-1 border rounded m-1' defaultValue={(event?.category) ? event.category : ''}>
                 <option value="sport">Sport</option>
                 <option value="concert">Concert</option>
                 <option value="movie">Movie</option>
@@ -148,7 +147,7 @@ function Event() {
 
             <div className='m-1'>
               <label htmlFor="file-upload" className='m-1'>Event Logo</label>
-              <input type="file" id='file-upload' accept="image/*" onChange={handleEventLogo} ref={fileRef} className='cursor-pointer border border-white rounded bg-[#072d4f] pl-1 w-22' />
+              <input key={'eventLogo'} type="file" id='file-upload' accept="image/*" onChange={handleEventLogo} ref={fileRef} className='cursor-pointer border border-white rounded bg-[#072d4f] pl-1 w-22' />
               {fileName && (
                 <span className='pl-2'>{fileName}</span>
               )}
@@ -156,22 +155,22 @@ function Event() {
 
             <div className='m-1'>
               <label htmlFor="startDate" className='m-1'>Event Start Date</label>
-              <input type="datetime-local" id='startDate' name='startDate' className='pl-1 border rounded m-1' defaultValue={(event?.startDate) ? event.startDate.slice(0, 16) : ''} />
+              <input key={'startDate'} type="datetime-local" id='startDate' name='startDate' className='pl-1 border rounded m-1' defaultValue={(event?.startDate) ? event.startDate.slice(0, 16) : ''} required/>
             </div>
 
             <div className='m-1'>
               <label htmlFor="endDate" className='m-1'>Event End Date (Optional)</label>
-              <input type="datetime-local" id='endDate' name='endDate' className='pl-1 border rounded m-1' defaultValue={(event?.endDate) ? event.endDate.slice(0, 16) : ''} />
+              <input key={'endDate'} type="datetime-local" id='endDate' name='endDate' className='pl-1 border rounded m-1' defaultValue={(event?.endDate) ? event.endDate.slice(0, 16) : ''} />
             </div>
 
             <div className='m-1'>
               <label htmlFor="duration" className='m-1'>Event Duration (Optional)</label>
-              <input type="time" id='duration' name='duration' className='pl-1 border rounded m-1' defaultValue={(event?.duration) ? event.duration : ''} />
+              <input key={'duration'} type="time" id='duration' name='duration' className='pl-1 border rounded m-1' defaultValue={(event?.duration) ? event.duration : ''} />
             </div>
 
             <div className='m-1'>
               <label htmlFor="ageLimit" className='m-1'>Age Limit</label>
-              <input type="Number" min={1} max={18} defaultValue={(event?.description) ? event.description : 18} id='ageLimit' name='ageLimit' className='pl-1 border rounded m-1' />
+              <input key='ageLimit' type="number" min={1} max={18} placeholder='e.g.18' defaultValue={(event?.ageLimit) ? parseInt(event?.ageLimit) : ''} id='ageLimit' name='ageLimit' className='pl-1 border rounded m-1' />
             </div>
 
             {type === 'add' && (
