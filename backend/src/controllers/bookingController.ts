@@ -1,40 +1,12 @@
 //talks to server
 
 import { RequestHandler, Response } from "express";
-import { createBooking } from "../services/bookingService";
-import { AuthRequest } from "../middlewares/authMiddleware";
-import { getMyBookings } from "../services/bookingService";
+import { createBooking } from "../services/booking.service.js";
+import { AuthRequest } from "../middlewares/authMiddleware.js";
+import { getMyBookings } from "../services/booking.service.js";
 import { success } from "zod";
-import { getBookingById } from "../services/bookingService";
-import { cancelBooking } from "../services/bookingService";
-
-export const createBookingHandler: RequestHandler = async (req, res) => {
-  const authReq = req as AuthRequest;
-
-  try {
-    const userId = authReq.user?.userId;
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized",
-      });
-    }
-
-    const { seatId } = req.body;
-
-    const booking = await createBooking(userId, seatId);
-
-    res.status(201).json({
-      success: true,
-      booking,
-    });
-  } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: error instanceof Error ? error.message : "Something went wrong",
-    });
-  }
-};
+import { getBookingById } from "../services/booking.service.js";
+import { cancelBooking } from "../services/booking.service.js";
 
 export const getMyBookingsHandler: RequestHandler = async (req, res) => {
   const authReq = req as AuthRequest;

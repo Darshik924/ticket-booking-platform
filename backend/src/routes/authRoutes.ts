@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { register, login, getProfile } from "../controllers/authController";
+import { register, login, getProfile } from "../controllers/authController.js";
 import passport from "passport";
 import { success } from "zod";
-import { authenticateUser } from "../middlewares/authMiddleware";
+import { authenticateUser } from "../middlewares/authMiddleware.js";
 
 const router = Router();
 

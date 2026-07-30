@@ -1,17 +1,13 @@
 import { Router } from "express";
-import { authenticateUser } from "../middlewares/authMiddleware";
+import { authenticateUser } from "../middlewares/authMiddleware.js";
 
 import {
-  createBookingHandler,
   getMyBookingsHandler,
   getBookingByIdHandler,
   cancelBookingHandler,
-} from "../controllers/bookingController";
+} from "../controllers/bookingController.js";
 
 const router = Router();
-
-// Create a new booking
-router.post("/", authenticateUser, createBookingHandler);
 
 // Get all bookings of logged-in user
 router.get("/my", authenticateUser, getMyBookingsHandler);

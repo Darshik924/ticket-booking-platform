@@ -1,17 +1,18 @@
 import { Request, RequestHandler, Response } from "express";
-import { prisma } from "../lib/prisma";
-import { redisClient } from "../lib/redis";
-import { REDIS_KEYS } from "../lib/constants";
-import { promoteQueueAndNotify } from "../services/queueService";
+import { prisma } from "../lib/prisma.js";
+import { redisClient } from "../lib/redis.js";
+import { REDIS_KEYS } from "../lib/constants.js";
+import { promoteQueueAndNotify } from "../services/queue.service.js";
 
 import {
   acquireSeatAndLock,
   releaseYourSeatLock,
   getLockHolder,
   getLockTTL,
-} from "../services/seatLock.service";
-import { AuthRequest } from "../middlewares/authMiddleware";
-import { getIntegerId } from "../utils/getIntegerIds";
+} from "../services/seatLock.service.js";
+import { AuthRequest } from "../middlewares/authMiddleware.js";
+import { getIntegerId } from "../utils/getIntegerIds.js";
+import { getIO } from "../lib/socket.js";
 
 // POST /api/seats/:eventId/:seatId/lock
 const lockSeat: RequestHandler = async (req, res) => {
@@ -37,7 +38,7 @@ const lockSeat: RequestHandler = async (req, res) => {
     return;
   }
 
-  //   Now we checked that if the seat Exists in the database itself the return the user NO
+  //  Now we checked that if the seat Exists in the database itself the return the user NO
   //  Had the seat existed in the database with the status === "AVAILABLE", it is still not a green light for us to directly lock for seat for our user some other user might still be processing his/her payment in redis server - we now check that
 
   //   Attempt Atomic Redis Locking
@@ -51,6 +52,12 @@ const lockSeat: RequestHandler = async (req, res) => {
 
   // Alright our client now passed Both our tests (DATABASE and redis DB or server)
   // We now start his TTL for a payment window
+
+  const io = getIO();
+  io.to(`seat_map:${eventId}`).emit("seat_status_changed", {
+    seatId: seat.id,
+    status: "LOCKED",
+  });
 
   const ttl = await getLockTTL(seat.eventId, seat.id);
   res.json({
@@ -88,8 +95,14 @@ const unLockSeat: RequestHandler = async (req, res) => {
   const activeKey = REDIS_KEYS.activeUsers(seat.eventId);
   await redisClient.srem(activeKey, String(userId));
   promoteQueueAndNotify(seat.eventId).catch((err) =>
-    console.error("Queue promotion failed:", err)
+    console.error("Queue promotion failed:", err),
   );
+
+  const io = getIO();
+  io.to(`seat_map:${eventId}`).emit("seat_status_changed", {
+    seatId: seat.id,
+    status: "AVAILABLE",
+  });
 
   res.json({ message: "Seat Lock Released", seatId: seat.id });
 };

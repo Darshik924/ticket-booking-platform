@@ -24,20 +24,8 @@ if result then
     end
     return 1 -- Seat Existed and the lock was acquired
 else 
-    -- Now we will check who holds the lock
-    local holder = redis.call("GET", key)
-    if (holder == userId) then 
-        -- The same user is relocking their own seat, Refresh our TTL
-        redis.call("EXPIRE", key, ttl)
-        -- Also ensure the state in the hash is still LOCKED
-        local seatVal = redis.call("HGET", hashKey, seatId)
-        if seatVal then
-            local seatNumber = string.match(seatVal, "([^:]+):")
-            if seatNumber then
-                redis.call("HSET", hashKey, seatId, seatNumber .. ":LOCKED")
-            end
-        end
-        return 1
-    end
+    -- Key already exists (held by someone, possibly this same user).
+    -- No relock/refresh functionality exists in the app, so any request
+    -- against an already-locked seat is simply a conflict.
     return 0
 end

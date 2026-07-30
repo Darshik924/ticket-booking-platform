@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { fetchMyBookings, cancelMyBooking } from "@/lib/api";
 import { bookingType } from "@/lib/types";
 import Navbar from "@/components/Nav";
+import BookingEventCard from "@/components/BookingEventCard";
+import { BookImage } from "lucide-react";
 
 export default function MyBookingsPage() {
   const [bookings, setBookings] = useState<bookingType[]>([]);
@@ -35,128 +37,56 @@ export default function MyBookingsPage() {
     filter === "all" ? bookings : bookings.filter((b) => b.status === filter);
 
   return (
-    <div>
+    <div className="bg-gray-800 min-h-screen">
       <Navbar />
-      <main className="max-w-3xl mx-auto px-6 py-10">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">My Bookings</h1>
-        <p className="text-gray-500 mb-6">All your ticket reservations</p>
+      <main className="mx-auto px-6 py-10">
+        <div className="mb-10 rounded-[2rem] border border-border bg-card/70 p-8 shadow-sm shadow-zinc-900/5 backdrop-blur-sm">
+          <div className="max-w-3xl mb-6">
+            <h1 className="text-3xl font-bold text-foreground sm:text-4xl">
+              My Bookings
+            </h1>
+            <p className="mt-3 text-base text-shadow-black sm:text-lg">
+              All your ticket reservations
+            </p>
+          </div>
 
-        <div className="flex gap-2 mb-6">
-          {(["all", "CONFIRMED", "CANCELLED"] as const).map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-4 py-1.5 rounded-full text-sm border transition ${
-                filter === f
-                  ? "bg-gray-900 text-white border-gray-900"
-                  : "border-gray-200 text-gray-500 hover:border-gray-400"
-              }`}
-            >
-              {f === "all" ? "All" : f.charAt(0) + f.slice(1).toLowerCase()}
-            </button>
-          ))}
+          <div className="flex gap-2">
+            {(["all", "CONFIRMED", "CANCELLED"] as const).map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`rounded-full border px-4 py-1.5 text-sm transition ${
+                  filter === f
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border text-shadow-black hover:border-primary/40"
+                }`}
+              >
+                {f === "all" ? "All" : f.charAt(0) + f.slice(1).toLowerCase()}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {loading && <p className="text-gray-500">Loading bookings...</p>}
-        {error && <p className="text-red-600">{error}</p>}
+        {loading && (
+          <p className="text-muted-foreground">Loading bookings...</p>
+        )}
+        {error && <p className="text-destructive">{error}</p>}
 
         {!loading && !error && filtered.length === 0 && (
-          <div className="text-center py-16 text-gray-400">
-            <p className="text-4xl mb-3">🎟️</p>
-            <p className="font-medium text-gray-600">No bookings found</p>
-            <p className="text-sm mt-1">Book an event to see it here</p>
+          <div className="py-16 text-center text-muted-foreground">
+            <p className="mb-3 text-4xl">🎟️</p>
+            <p className="font-medium text-foreground">No bookings found</p>
+            <p className="mt-1 text-sm">Book an event to see it here</p>
           </div>
         )}
 
-        <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-3 gap-4">
           {filtered.map((booking) => (
-            <div
+            <BookingEventCard
+              booking={booking}
+              handleCancel={handleCancel}
               key={booking.id}
-              className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm"
-            >
-              <div className="flex justify-between items-start mb-3">
-                <div>
-                  {/* 1. Event Name Header */}
-                  <h2 className="text-xl font-bold text-gray-900 mb-1">
-                    {booking.seat?.event?.name || "Untitled Event"}
-                  </h2>
-
-                  {/* Booking ID */}
-                  <p className="text-xs text-gray-400 mb-3">
-                    Booking #{booking.id}
-                  </p>
-
-                  {/* 2. Seat Details */}
-                  <p className="text-sm text-gray-500 mt-1">
-                    🎫 Seat:{" "}
-                    <span className="font-semibold text-gray-700">
-                      {booking.seat?.seatNumber}
-                    </span>
-                  </p>
-
-                  {/* 3. Event Execution Date (The day the party happens) */}
-                  <p className="text-sm text-gray-600 font-medium">
-                    📅 Event Date:{" "}
-                    {booking.seat?.event?.date
-                      ? new Date(booking.seat.event.date).toLocaleDateString()
-                      : "N/A"}
-                  </p>
-
-                  {/* 4. Ticket Booking Date (The day they bought it) */}
-                  <p className="text-xs text-gray-400 mt-1">
-                    🗓️ Booked on:{" "}
-                    {new Date(booking.createdAt).toLocaleDateString()}
-                  </p>
-                  <a
-                    href={`/events/${booking.seat.eventId}`}
-                    className="text-sm text-blue-600 hover:underline mt-1 inline-block"
-                  >
-                    View Event →
-                  </a>
-                </div>
-
-                <div className="flex flex-col items-end gap-2">
-                  <span
-                    className={`text-xs font-medium px-3 py-1 rounded-full ${
-                      booking.status === "CONFIRMED"
-                        ? "bg-green-100 text-green-700"
-                        : booking.status === "PENDING"
-                          ? "bg-yellow-100 text-yellow-700"
-                          : "bg-red-100 text-red-600"
-                    }`}
-                  >
-                    {booking.status.charAt(0) +
-                      booking.status.slice(1).toLowerCase()}
-                  </span>
-
-                  <span
-                    className={`text-xs px-3 py-1 rounded-full ${
-                      booking.paymentStatus === "PAID"
-                        ? "bg-blue-100 text-blue-700"
-                        : booking.paymentStatus === "PENDING"
-                          ? "bg-orange-100 text-orange-600"
-                          : "bg-red-100 text-red-500"
-                    }`}
-                  >
-                    💳{" "}
-                    {booking.paymentStatus.charAt(0) +
-                      booking.paymentStatus.slice(1).toLowerCase()}
-                  </span>
-                </div>
-              </div>
-
-              <hr className="my-3 border-gray-100" />
-
-              <div className="flex justify-end">
-                <button
-                  onClick={() => handleCancel(booking.id)}
-                  disabled={booking.status === "CANCELLED"}
-                  className="text-sm border border-red-200 text-red-500 rounded-lg px-4 py-2 hover:bg-red-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  Cancel Booking
-                </button>
-              </div>
-            </div>
+            />
           ))}
         </div>
       </main>

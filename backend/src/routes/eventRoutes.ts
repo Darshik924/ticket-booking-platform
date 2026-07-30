@@ -11,11 +11,12 @@ import {
   deleteVenue,
   updateVenue
 } from "../controllers/eventController";
+
 import {
   adminAuthenticate,
   authenticateUser,
-} from "../middlewares/authMiddleware";
-import { getSeatMap } from "../controllers/seatController";
+} from "../middlewares/authMiddleware.js";
+import { getSeatMap } from "../controllers/seatController.js";
 
 const eventRouter = express.Router();
 // Get all the events for ther users

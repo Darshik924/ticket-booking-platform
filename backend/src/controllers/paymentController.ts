@@ -1,10 +1,11 @@
 import { RequestHandler } from "express";
-import { prisma } from "../lib/prisma";
-import { redisClient } from "../lib/redis";
-import { REDIS_KEYS } from "../lib/constants";
-import { paymentQueue } from "../lib/bullmq";
-import { AuthRequest } from "../middlewares/authMiddleware";
-import { getIntegerId } from "../utils/getIntegerIds";
+import { prisma } from "../lib/prisma.js";
+import { redisClient } from "../lib/redis.js";
+import { REDIS_KEYS } from "../lib/constants.js";
+import { paymentQueue } from "../lib/queue.js";
+import { getIO } from "../lib/socket.js";
+import { AuthRequest } from "../middlewares/authMiddleware.js";
+import { getIntegerId } from "../utils/getIntegerIds.js";
 
 /**
  * Initiates the payment process for a locked seat by pushing a job to BullMQ.
@@ -13,12 +14,13 @@ import { getIntegerId } from "../utils/getIntegerIds";
 export const processPaymentHandler: RequestHandler = async (req, res) => {
   const authReq = req as AuthRequest;
   const userId = authReq.user?.userId;
+  const io = getIO();
 
   if (!userId) {
     return res.status(401).json({ success: false, message: "Unauthorized" });
   }
 
-  const { eventId, seatId } = req.body;
+  const { eventId, seatId, imageUrl } = req.body;
 
   if (!eventId || !seatId) {
     return res.status(400).json({
@@ -37,11 +39,15 @@ export const processPaymentHandler: RequestHandler = async (req, res) => {
     });
 
     if (!seat) {
-      return res.status(404).json({ success: false, message: "Seat not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Seat not found" });
     }
 
     if (seat.status === "BOOKED") {
-      return res.status(400).json({ success: false, message: "Seat is already booked" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Seat is already booked" });
     }
 
     // 2. Verify Redis lock ownership (the user must hold the active lock to pay)
@@ -51,7 +57,8 @@ export const processPaymentHandler: RequestHandler = async (req, res) => {
     if (!lockHolder || Number(lockHolder) !== userId) {
       return res.status(403).json({
         success: false,
-        message: "You do not hold the lock on this seat, or the payment window has expired",
+        message:
+          "You do not hold the lock on this seat, or the payment window has expired",
       });
     }
 
@@ -66,6 +73,7 @@ export const processPaymentHandler: RequestHandler = async (req, res) => {
       create: {
         userId,
         seatId: newSeatId,
+        imageUrl,
         status: "PENDING",
         paymentStatus: "UNPAID",
       },
@@ -82,7 +90,8 @@ export const processPaymentHandler: RequestHandler = async (req, res) => {
     // Return 202 Accepted as payment is processing asynchronously
     res.status(202).json({
       success: true,
-      message: "Payment request received. Processing booking in the background.",
+      message:
+        "Payment request received. Processing booking in the background.",
       bookingId: booking.id,
       status: "PENDING",
     });

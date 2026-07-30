@@ -2,8 +2,8 @@
 
 import { useMemo, useState, useEffect } from "react";
 import Nav from "@/components/Nav";
-import AdminEventCard from "@/components/AdminEventCard";
-import AdminEventForm from "@/components/AdminEventForm";
+import AdminEventCard from "@/components/admin/AdminEventCard";
+import AdminEventForm from "@/components/admin/AdminEventForm";
 import AdminProtect from "@/middleware/AdminProtect";
 import { eventType } from "@/lib/types";
 import { useAuth } from "@/context/AuthContext";
@@ -110,6 +110,7 @@ const Admin = () => {
     setFormEvent({
       name: "",
       venue: "",
+      imageUrl: "",
       date: new Date().toISOString().slice(0, 16),
       totalSeats: 50,
       availableSeats: 50,
@@ -130,6 +131,7 @@ const Admin = () => {
       !formEvent.name ||
       !formEvent.venue ||
       !formEvent.date ||
+      !formEvent.imageUrl ||
       !formEvent.totalSeats
     ) {
       setFormError("Please fill out all event fields before saving.");
@@ -154,6 +156,7 @@ const Admin = () => {
     const payload = {
       name: String(formEvent.name),
       venue: String(formEvent.venue),
+      imageUrl: String(formEvent.imageUrl),
       date: new Date(String(formEvent.date)).toISOString(),
       totalSeats: Number(formEvent.totalSeats),
     };
@@ -188,19 +191,19 @@ const Admin = () => {
 
   return (
     <AdminProtect>
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-gray-800">
         <Nav />
         <main className="mx-auto max-w-7xl px-6 py-10">
-          <div className="mb-10 rounded-4xl bg-white p-8 shadow-sm border border-gray-200">
+          <div className="mb-10 rounded-4xl border border-border bg-card p-8 shadow-sm">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">
                   Admin dashboard
                 </p>
-                <h1 className="mt-3 text-3xl font-semibold text-slate-900 sm:text-4xl">
+                <h1 className="mt-3 text-3xl font-semibold text-foreground sm:text-4xl">
                   Manage events & sessions
                 </h1>
-                <p className="mt-3 max-w-2xl text-sm text-slate-500 sm:text-base">
+                <p className="mt-3 max-w-2xl text-sm text-muted-foreground sm:text-base">
                   Use this page to preview event details, edit metadata, and
                   prepare new shows before publishing.
                 </p>
@@ -210,16 +213,16 @@ const Admin = () => {
                 type="button"
                 onClick={handleCreate}
                 disabled={actionLoading}
-                className="inline-flex items-center justify-center rounded-2xl bg-black px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center cursor-pointer justify-center rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition  hover:text-blue-950 duration-300 hover:bg-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 + New event
               </button>
             </div>
 
             <div className="mt-8 grid gap-4 md:grid-cols-1">
-              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">Total events</p>
-                <p className="mt-2 text-3xl font-semibold text-slate-900">
+              <div className="rounded-3xl border border-border bg-muted p-4">
+                <p className="text-sm text-muted-foreground">Total events</p>
+                <p className="mt-2 text-3xl font-semibold text-foreground">
                   {events.length}
                 </p>
               </div>
@@ -227,13 +230,13 @@ const Admin = () => {
           </div>
 
           {successMessage && (
-            <div className="mb-6 rounded-3xl border border-emerald-100 bg-emerald-50 px-5 py-4 text-sm text-emerald-700">
+            <div className="mb-6 rounded-3xl border border-secondary/20 bg-secondary/10 px-5 py-4 text-sm text-secondary-foreground">
               {successMessage}
             </div>
           )}
 
           {pageError && (
-            <div className="mb-6 rounded-3xl border border-red-100 bg-red-50 px-5 py-4 text-sm text-red-700">
+            <div className="mb-6 rounded-3xl border border-destructive/20 bg-destructive/10 px-5 py-4 text-sm text-destructive">
               {pageError}
             </div>
           )}
@@ -248,14 +251,14 @@ const Admin = () => {
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Search events or venue"
-                      className="w-full rounded-3xl border border-gray-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-black focus:outline-none focus:ring-2 focus:ring-black/10"
+                      className="w-full rounded-3xl border border-border bg-background px-4 py-3 text-sm text-foreground shadow-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/10"
                     />
                   </label>
                 </div>
               </div>
 
               {loading ? (
-                <div className="rounded-3xl border border-gray-200 bg-white p-10 text-center text-sm text-slate-500">
+                <div className="rounded-3xl border border-border bg-card p-10 text-center text-sm text-muted-foreground">
                   Loading events...
                 </div>
               ) : (
@@ -270,7 +273,7 @@ const Admin = () => {
                     />
                   ))}
                   {filteredEvents.length === 0 && (
-                    <div className="rounded-3xl border border-dashed border-gray-300 bg-white p-10 text-center text-sm text-slate-500">
+                    <div className="rounded-3xl border border-dashed border-border bg-card p-10 text-center text-sm text-muted-foreground">
                       No matching events found. Try another search term or
                       create a new event.
                     </div>
@@ -280,13 +283,13 @@ const Admin = () => {
             </div>
 
             <div className="sticky top-6">
-              <div className="rounded-4xl border border-gray-200 bg-white p-6 shadow-sm">
+              <div className="rounded-4xl border border-border bg-card p-6 shadow-sm">
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold text-gray-900">
+                    <p className="text-sm font-semibold text-foreground">
                       Event editor
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted-foreground">
                       {isFormOpen
                         ? "Change fields and save"
                         : "Select an event to edit or create a new one."}
@@ -297,7 +300,7 @@ const Admin = () => {
                 {isFormOpen ? (
                   <>
                     {formError && (
-                      <div className="mb-4 rounded-3xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+                      <div className="mb-4 rounded-3xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
                         {formError}
                       </div>
                     )}
@@ -310,8 +313,8 @@ const Admin = () => {
                     />
                   </>
                 ) : (
-                  <div className="rounded-3xl border border-dashed border-gray-200 bg-slate-50 p-6 text-sm text-slate-500">
-                    <p className="mb-3 font-medium text-slate-900">
+                  <div className="rounded-3xl border border-dashed border-border bg-muted p-6 text-sm text-muted-foreground">
+                    <p className="mb-3 font-medium text-foreground">
                       Quick actions
                     </p>
                     <ul className="space-y-3">

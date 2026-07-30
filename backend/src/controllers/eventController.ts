@@ -96,6 +96,7 @@ const listAllEvents = async (req: Request, res: Response) => {
     res.json({ events });
   } catch (err) {
     console.log("Error while fetching Events", err);
+    res.status(500).json({ error: "Failed to fetch events" });
   }
 };
 
@@ -190,8 +191,8 @@ const createAnEvent = async (req: Request, res: Response) => {
           description: eventData.description,
           tag: eventData.tag,
           category: eventData.category,
-          startDate: eventData.startDate ? new Date(eventData.startDate) : null,
-          endDate: eventData.endDate ? new Date(eventData.endDate) : null,
+          startDate: new Date(eventData.startDate),
+          endDate: new Date(eventData.endDate),
           duration: eventData.duration,
           venueId: venue.id,
           seatLayout: eventData.seatLayout,
@@ -207,8 +208,8 @@ const createAnEvent = async (req: Request, res: Response) => {
           description: eventData.description,
           tag: eventData.tag,
           category: eventData.category,
-          startDate: eventData.startDate ? new Date(eventData.startDate) : null,
-          endDate: eventData.endDate ? new Date(eventData.endDate) : null,
+          startDate: new Date(eventData.startDate),
+          endDate: new Date(eventData.endDate),
           duration: eventData.duration,
           venueId: eventData.venueId,
           seatLayout: eventData.seatLayout,
@@ -272,7 +273,7 @@ const createVenue = async (req: Request, res: Response) => {
 
 }
 
-// PUT api/events/:eventId
+// // PUT api/events/:eventId
 const updateAnEvent = async (req: Request, res: Response) => {
   const { eventId } = req.params;
 
@@ -283,7 +284,7 @@ const updateAnEvent = async (req: Request, res: Response) => {
     return;
   }
 
-  const { name, venue, date, totalSeats } = parsed.data;
+  const event = parsed.data;
   const newId = getIntegerId(eventId);
   // const newId = +eventId;
 
@@ -291,64 +292,65 @@ const updateAnEvent = async (req: Request, res: Response) => {
     return res.status(400).json({ error: "Invalid event ID format" });
   }
 
-  try {
-    // We use a transaction to ensure everything updates successfully together
-    const updatedEvent = await prisma.$transaction(async (tx: any) => {
-      // 1. If totalSeats is being updated, we handle the seat recreation
-      if (totalSeats !== undefined) {
-        // Delete existing seats first
-        await tx.seat.deleteMany({
-          where: { eventId: newId },
-        });
-      }
+  // try {
+  //   // We use a transaction to ensure everything updates successfully together
+  //   const updatedEvent = await prisma.$transaction(async (tx: any) => {
+  //     // 1. If totalSeats is being updated, we handle the seat recreation
+  //     if (totalSeats !== undefined) {
+  //       // Delete existing seats first
+  //       await tx.seat.deleteMany({
+  //         where: { eventId: newId },
+  //       });
+  //     }
 
-      const event = await tx.event.update({
-        where: { id: newId },
-        data: {
-          ...(name && { name }),
-          ...(venue && { venue }),
-          ...(date && { date: new Date(date) }),
-          ...(totalSeats !== undefined && {
-            totalSeats,
-            seats: {
-              create: Array.from({ length: totalSeats }, (_, i) => ({
-                seatNumber: `A${i + 1}`,
-              })),
-            },
-          }),
-        },
-        include: { _count: { select: { seats: true } } },
-      });
+  //     const event = await tx.event.update({
+  //       where: { id: newId },
+  //       data: {
+  //         ...(name && { name }),
+  //         ...(venue && { venue }),
+  //         ...(imageUrl && { imageUrl }),
+  //         ...(date && { date: new Date(date) }),
+  //         ...(totalSeats !== undefined && {
+  //           totalSeats,
+  //           seats: {
+  //             create: Array.from({ length: totalSeats }, (_, i) => ({
+  //               seatNumber: `A${i + 1}`,
+  //             })),
+  //           },
+  //         }),
+  //       },
+  //       include: { _count: { select: { seats: true } } },
+  //     });
 
-      return event;
-    });
+  //     return event;
+  //   });
 
-    // If totalSeats was updated, sync with Redis cache
-    if (totalSeats !== undefined) {
-      const hashKey = REDIS_KEYS.eventSeats(newId);
-      await redisClient.del(hashKey);
+  //   // If totalSeats was updated, sync with Redis cache
+  //   if (totalSeats !== undefined) {
+  //     const hashKey = REDIS_KEYS.eventSeats(newId);
+  //     await redisClient.del(hashKey);
 
-      const seats = await prisma.seat.findMany({
-        where: { eventId: newId },
-        orderBy: { seatNumber: "asc" },
-      });
+  //     const seats = await prisma.seat.findMany({
+  //       where: { eventId: newId },
+  //       orderBy: { seatNumber: "asc" },
+  //     });
 
-      const pipeline = redisClient.pipeline();
-      seats.forEach((seat: any) => {
-        pipeline.hset(
-          hashKey,
-          String(seat.id),
-          `${seat.seatNumber}:${seat.status}`,
-        );
-      });
-      await pipeline.exec();
-    }
+  //     const pipeline = redisClient.pipeline();
+  //     seats.forEach((seat: any) => {
+  //       pipeline.hset(
+  //         hashKey,
+  //         String(seat.id),
+  //         `${seat.seatNumber}:${seat.status}`,
+  //       );
+  //     });
+  //     await pipeline.exec();
+  //   }
 
-    res.status(200).json({ event: updatedEvent });
-  } catch (error) {
-    // Handle cases where the event ID doesn't exist
-    res.status(404).json({ error: "Event not found or failed to update" });
-  }
+  //   res.status(200).json({ event: updatedEvent });
+  // } catch (error) {
+  //   // Handle cases where the event ID doesn't exist
+  //   res.status(404).json({ error: "Event not found or failed to update" });
+  // }
 };
 
 const updateVenue = async (req: Request, res: Response) => {
@@ -361,17 +363,17 @@ const updateVenue = async (req: Request, res: Response) => {
   }
   try {
     const updatedVenue = await prisma.venue.update({
-      where:{
-        id:newId
+      where: {
+        id: newId
       },
-      data:{
-        name:venue.name,
-        address:venue.address,
-        state:venue.state,
-        city:venue.city,
-        pincode:venue.pincode,
-        country:venue.country,
-        seatLayout:venue.seatLayout
+      data: {
+        name: venue.name,
+        address: venue.address,
+        state: venue.state,
+        city: venue.city,
+        pincode: venue.pincode,
+        country: venue.country,
+        seatLayout: venue.seatLayout
       }
     });
 
@@ -433,4 +435,4 @@ const deleteVenue = async (req: Request, res: Response) => {
   }
 }
 
-export { listAllEvents, listAllVenues, getEvent, createAnEvent, updateAnEvent, deleteAnEvent, updateVenue, getVenue, createVenue, deleteVenue}
+export { listAllEvents, listAllVenues, getEvent, createAnEvent, updateAnEvent, deleteAnEvent, updateVenue, getVenue, createVenue, deleteVenue }

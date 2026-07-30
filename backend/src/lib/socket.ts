@@ -1,20 +1,34 @@
 import { Server as HttpServer } from "http";
 import { Server, Socket } from "socket.io";
 import jwt from "jsonwebtoken";
-import { redisClient } from "./redis";
-import { REDIS_KEYS } from "./constants";
+import { redisClient } from "./redis.js";
+import { REDIS_KEYS } from "./constants.js";
 
 let io: Server;
 
 export const initSocket = (server: HttpServer) => {
+  const rawOrigins = [
+    process.env.FRONTEND_URL,
+    process.env.FRONTEND_URL_ALT,
+    "http://localhost:3000",
+    "http://localhost:4000",
+  ].filter(Boolean) as string[];
+
+  const allowedOrigins = rawOrigins.map((origin) => origin.replace(/\/$/, ""));
+
   io = new Server(server, {
     cors: {
-      // 1. Swap the "*" wildcard out for your exact frontend URL
-      origin: process.env.FRONTEND_URL || "http://localhost:3000",
-      
-      // 2. Explicitly allow credentials/cookies to pass through
+      origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps, curl, server-to-server)
+        if (!origin) return callback(null, true);
+        const cleanOrigin = origin.replace(/\/$/, "");
+        if (allowedOrigins.length === 0 || allowedOrigins.includes(cleanOrigin) || allowedOrigins.includes("*")) {
+          return callback(null, true);
+        }
+        console.warn(`[Socket CORS] Origin '${origin}' allowed as fallback for deployment`);
+        return callback(null, true);
+      },
       credentials: true,
-      
       methods: ["GET", "POST"],
     },
   });
@@ -54,6 +68,11 @@ export const initSocket = (server: HttpServer) => {
       console.log(`User ${userId} joined event queue room: ${eventId}`);
     });
 
+    socket.on("join_seat_map", (eventId: string) => {
+      socket.join(`seat_map:${eventId}`);
+      console.log(`User ${userId} joined seat map room: ${eventId}`);
+    });
+
     socket.on("leave_event_queue", async (eventId: number | string) => {
       const eId = Number(eventId);
       const queueKey = REDIS_KEYS.waitingQueue(eId);
@@ -63,10 +82,13 @@ export const initSocket = (server: HttpServer) => {
       await redisClient.srem(activeKey, String(userId));
 
       socket.leave(`event_queue:${eventId}`);
-      console.log(`User ${userId} explicitly left event queue room: ${eventId}`);
+      console.log(
+        `User ${userId} explicitly left event queue room: ${eventId}`,
+      );
 
       // Promote next user in line
-      const { promoteQueueAndNotify } = await import("../services/queueService");
+      const { promoteQueueAndNotify } =
+        await import("../services/queue.service.js");
       await promoteQueueAndNotify(eId);
     });
 
@@ -82,7 +104,8 @@ export const initSocket = (server: HttpServer) => {
         await redisClient.srem(activeKey, String(userId));
 
         // Promote next user in line
-        const { promoteQueueAndNotify } = await import("../services/queueService");
+        const { promoteQueueAndNotify } =
+          await import("../services/queue.service.js");
         await promoteQueueAndNotify(eId);
       }
     });
