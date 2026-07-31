@@ -643,7 +643,7 @@ npm run dev
 
 ---
 
-### 6. Generating Dummy Users For Tests (Optional for Test 1,3,4)
+### 5. Generating Dummy Users For Tests (Optional for Test 1,3,4)
 
 We will generate a Load Test users.json file that would basically have dummy users (or tokens to be precise) that will be instantly used to simulate traffic on our application
 
@@ -659,7 +659,7 @@ cd ../
 
 ---
 
-### 5. Executing the Load Tests
+### 6. Executing the Load Tests
 
 In order to run a load test, please match the config in the load test script (we have tried our best to match it beforehand, but still check once).
 

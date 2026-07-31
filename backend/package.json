@@ -11,7 +11,7 @@
     "start": "node dist/server.js",
     "db:migrate": "npx prisma generate && npx prisma migrate deploy",
     "db:seed": "npx prisma db seed",
-    "seed:users": "tsx --env-file=.env loadtests/generateDummyUsers.ts"
+    "seed:users": "tsx --env-file=.env ./loadtests/generateDummyUsers.ts"
   },
   "prisma": {
     "seed": "npx tsx src/lib/seed.ts"
