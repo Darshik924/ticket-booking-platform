@@ -1,19 +1,19 @@
 import { prisma } from "../src/lib/prisma";
 import jwt from "jsonwebtoken";
 import fs from "fs";
+import path from "path";
 
 // IMPORTANT: This must exactly match the JWT_SECRET in your .env file
 const JWT_SECRET: string =
   process.env.JWT_SECRET || "ticket_booking_dev_secret";
 
 async function generateUsers(): Promise<void> {
-  // Define the type for the data we are pushing
+
   const usersToInsert: { name: string; email: string; passwordHash: string }[] =
     [];
   const batchId = `flashsale_${Date.now()}`;
 
   // We use a dummy hash since k6 won't actually hit the /login endpoint anyway.
-  // It just uses the pre-generated JWTs.
   const dummyPasswordHash = "12345";
 
   for (let i = 0; i < 3000; i++) {
@@ -24,18 +24,17 @@ async function generateUsers(): Promise<void> {
     });
   }
 
-  await prisma.user.createMany({
+  const result = await prisma.user.createMany({
     data: usersToInsert,
     skipDuplicates: true,
   });
 
-  // Fixed: Added email to the select statement so it can be used in the JWT
   const insertedUsers = await prisma.user.findMany({
     where: { email: { startsWith: batchId } },
     select: { id: true, email: true },
   });
+  console.log(`Found ${insertedUsers.length} matching user records.`);
 
-  // Function to generate a JWT token for a user with proper typing
   const generateToken = (userId: number, email: string): string => {
     return jwt.sign(
       {
@@ -44,23 +43,30 @@ async function generateUsers(): Promise<void> {
       },
       JWT_SECRET,
       {
-        expiresIn: "7d", // Note: Usually lowercase 'd' for jsonwebtoken
+        expiresIn: "7d",
       },
     );
   };
 
-  const outputData = insertedUsers.map((user) => {
-    const token = generateToken(user.id, user.email);
-    return { token };
-  });
+  const outputData = insertedUsers.map((user) => ({
+    token: generateToken(user.id, user.email),
+  }));
 
-  fs.writeFileSync("users.json", JSON.stringify(outputData, null, 2));
+  const outputPath = path.join(import.meta.dirname, "users.json");
+  console.log(`📝 Writing tokens to: ${outputPath}`);
+
+  fs.writeFileSync(outputPath, JSON.stringify(outputData, null, 2));
+
+  console.log(
+    `🎉 SUCCESS! Created ${outputData.length} users and saved tokens to loadtests/users.json`,
+  );
 }
 
 generateUsers()
   .catch((e: unknown) => {
-    console.error("❌ Error generating users:", e);
+    console.error("❌ Fatal error generating users:", e);
   })
   .finally(async () => {
+    console.log("🔌 Disconnecting Prisma...");
     await prisma.$disconnect();
   });
