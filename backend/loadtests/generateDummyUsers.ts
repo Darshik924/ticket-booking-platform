@@ -7,7 +7,6 @@ const JWT_SECRET: string =
   process.env.JWT_SECRET || "ticket_booking_dev_secret";
 
 async function generateUsers(): Promise<void> {
-
   // Define the type for the data we are pushing
   const usersToInsert: { name: string; email: string; passwordHash: string }[] =
     [];
@@ -17,10 +16,10 @@ async function generateUsers(): Promise<void> {
   // It just uses the pre-generated JWTs.
   const dummyPasswordHash = "12345";
 
-  for (let i = 0; i < 10000; i++) {
+  for (let i = 0; i < 3000; i++) {
     usersToInsert.push({
-      name: `K6_User_${i}`,
-      email: `${batchId}_${i}@test.com`,
+      name: `K6_UserSS_${i}`,
+      email: `${batchId}SS_${i}@test.com`,
       passwordHash: dummyPasswordHash,
     });
   }
@@ -50,14 +49,12 @@ async function generateUsers(): Promise<void> {
     );
   };
 
-
   const outputData = insertedUsers.map((user) => {
     const token = generateToken(user.id, user.email);
     return { token };
   });
 
   fs.writeFileSync("users.json", JSON.stringify(outputData, null, 2));
-
 }
 
 generateUsers()
