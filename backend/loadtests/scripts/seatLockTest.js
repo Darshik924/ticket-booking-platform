@@ -1,12 +1,12 @@
 import http from "k6/http";
 import { check } from "k6";
 import { Counter } from "k6/metrics";
+import { SharedArray } from "k6/data";
+import { check, sleep } from "k6";
 
 /* This is the main Load test for our app that tests and proofs the ZERO overselling of tickets,  */
 
 /*
-  Spike test for read-heavy / browse routes (GET /api/events, GET /api/events/:id).
-
   Goal: To prove that no matter how many users target the same seat we will have only one user who would
   successfully lock the seat and all the others would fail at locking (eg., Over here we have 1 success and 499 failures).
 
@@ -50,42 +50,29 @@ export const options = {
 };
 /* Notes: Document how only 1 sucess is observed and 499 failures are observed when 500 users target the same seat */
 
+const usersData = new SharedArray("users", function () {
+  return JSON.parse(open("../users.json"));
+});
+
 // setup() runs once, before any VU starts. We register new 500 VUs into the db each with their own tokens and then Run the test using these new VUs targetting the same seat id 147
 // I do realise it would have been easier to just login 500 users from the same token but that was not giving satisfactory load test results. Besides we were able to simulate an accurate load testing scenario with 500 different users
 /* Since we should focus more on seatLock here */
 export function setup() {
-  const users = [];
-  const timestamp = Date.now();
-
-  for (let i = 0; i < USER_COUNT; i++) {
-    const email = `seatlock_${timestamp}_${i}@example.com`;
-    const registerRes = http.post(
-      `${BASE_URL}/auth/register`,
-      JSON.stringify({
-        name: `Seat Lock User ${i + 1}`,
-        email,
-        password: PASSWORD,
-      }),
-      {
-        headers: { "Content-Type": "application/json" },
-      },
-    );
-
-    if (registerRes.status !== 201) {
-      throw new Error(
-        `Setup registration failed with status ${registerRes.status}: ${registerRes.body}`,
-      );
-    }
-
-    const token = JSON.parse(registerRes.body).token;
-    users.push(token);
-  }
-
-  return { users };
+  return {};
 }
 
-export default function (data) {
-  const token = data.users[__VU - 1];
+export default function () {
+  const userIndex = (__VU - 1) % usersData.length;
+  const currentUser = usersData[userIndex];
+
+  // Defensive check to ensure we never crash if a record is malformed
+  if (!currentUser || !currentUser.token) {
+    sleep(1);
+    return;
+  }
+
+  const token = currentUser.token;
+
   const lockRes = http.post(
     `${BASE_URL}/seats/${EVENT_ID}/${SEAT_ID}/lock`,
     null,
@@ -96,7 +83,7 @@ export default function (data) {
     },
   );
 
-  // Updating our Counters here 
+  // Updating our Counters here
   if (lockRes.status === 200) {
     lockSuccess.add(1);
   } else if (lockRes.status === 409) {
