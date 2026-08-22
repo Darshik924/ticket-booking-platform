@@ -443,16 +443,25 @@ Open the generated `.env` file and customize your target secrets if necessary.
 
 ---
 
-### 3. Database setup
+### 3. Spin Up Containerized Core Infrastructure
+
+Launch your isolated containerized database, caching layer, and other systems in the background using the dedicated load-testing Docker Compose file:
 
 ```bash
-cd backend
-npx prisma migrate deploy
-# or for development:
-npx prisma migrate dev
+docker compose -f loadtests/docker/loadTesting.yml up -d
 ```
 
-### 4. Run the backend
+### 4. Database setup
+
+```bash
+# Generate type definitions & push migration schemas
+npm run db:migrate
+
+# Fire up the TSX-managed seeding mechanism
+npm run db:seed
+```
+
+### 5. Run the backend
 
 ```bash
 cd backend
@@ -460,7 +469,7 @@ npm run dev
 # → http://localhost:5000
 ```
 
-### 5. Frontend environment
+### 6. Frontend environment
 
 Create `frontend/.env.local`:
 
@@ -468,7 +477,7 @@ Create `frontend/.env.local`:
 NEXT_PUBLIC_API_URL=http://localhost:5000
 ```
 
-### 6. Run the frontend
+### 7. Run the frontend
 
 ```bash
 cd frontend
@@ -476,9 +485,9 @@ npm run dev
 # → http://localhost:4000
 ```
 
-### 7. Create an admin user
+### 8. Create an admin user
 
-Register a user via the UI, then promote them in the database:
+Register a user via the UI, then promote them in the database: Make sure you do this inside for the docker container if using that one or outisde if using your own and accordingly.
 
 ```sql
 UPDATE "User" SET role = 'ADMIN' WHERE email = 'your@email.com';
